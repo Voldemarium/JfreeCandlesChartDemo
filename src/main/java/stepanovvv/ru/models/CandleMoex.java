@@ -17,4 +17,7 @@ public class CandleMoex {
     private LocalDateTime begin;
     private LocalDateTime end;
 
+    private double buyMetric;
+    private double sellMetric;
+
 }

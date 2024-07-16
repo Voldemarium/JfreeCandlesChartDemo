@@ -29,13 +29,15 @@ public class JfreeCandlesChartDemo extends JPanel {
 
         List<CandleMoex> candleMoexList = List.of(
                 CandleMoex.builder()
-                .begin(LocalDateTime.of(2024, 7, 1, 10, 0))
-                .volume(153.32)
-                .close(301.1)
-                .open(298.5)
-                .high(301.4)
-                .low(298.0)
-                .build(),
+                        .begin(LocalDateTime.of(2024, 7, 1, 10, 0))
+                        .volume(153.32)
+                        .close(301.1)
+                        .open(298.5)
+                        .high(301.4)
+                        .low(298.0)
+                        .buyMetric(200.5)
+                        .sellMetric(456.3)
+                        .build(),
                 CandleMoex.builder()
                         .begin(LocalDateTime.of(2024, 7, 3, 10, 0))
                         .volume(154.1)
@@ -43,6 +45,8 @@ public class JfreeCandlesChartDemo extends JPanel {
                         .open(299.5)
                         .high(302.4)
                         .low(297.0)
+                        .buyMetric(178.5)
+                        .sellMetric(234.0)
                         .build(),
                 CandleMoex.builder()
                         .begin(LocalDateTime.of(2024, 7, 4, 10, 0))
@@ -51,6 +55,8 @@ public class JfreeCandlesChartDemo extends JPanel {
                         .open(302.5)
                         .high(303.4)
                         .low(287.0)
+                        .buyMetric(278.5)
+                        .sellMetric(189.6)
                         .build(),
                 CandleMoex.builder()
                         .begin(LocalDateTime.of(2024, 8, 1, 10, 0))
@@ -59,6 +65,8 @@ public class JfreeCandlesChartDemo extends JPanel {
                         .open(302.5)
                         .high(303.4)
                         .low(287.0)
+                        .buyMetric(456.5)
+                        .sellMetric(345.3)
                         .build()
 
         );
@@ -71,7 +79,9 @@ public class JfreeCandlesChartDemo extends JPanel {
                     candleMoex.getHigh(),
                     candleMoex.getLow(),
                     candleMoex.getClose(),
-                    candleMoex.getVolume()
+                    candleMoex.getVolume(),
+                    candleMoex.getBuyMetric(),
+                    candleMoex.getSellMetric()
             );
         }
 
@@ -79,7 +89,7 @@ public class JfreeCandlesChartDemo extends JPanel {
         frame.setContentPane(jfreeCandlesChart);
 
         //Disable the resizing feature
-        frame.setResizable(false);
+        frame.setResizable(true);
         //Display the window.
         frame.pack();
         frame.setVisible(true);
