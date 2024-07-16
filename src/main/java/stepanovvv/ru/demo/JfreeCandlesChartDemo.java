@@ -16,7 +16,6 @@ import java.util.List;
 public class JfreeCandlesChartDemo extends JPanel {
     String ticker;
 
-
     private void createAndShowGUI() {
         //Make sure we have nice window decorations.
         JFrame.setDefaultLookAndFeelDecorated(true);
