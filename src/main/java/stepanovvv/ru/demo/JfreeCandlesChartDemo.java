@@ -29,7 +29,7 @@ public class JfreeCandlesChartDemo extends JPanel {
 
         List<CandleMoex> candleMoexList = List.of(
                 CandleMoex.builder()
-                .begin(LocalDateTime.of(2024, 7, 10, 10, 0))
+                .begin(LocalDateTime.of(2024, 7, 1, 10, 0))
                 .volume(153.32)
                 .close(301.1)
                 .open(298.5)
@@ -37,12 +37,28 @@ public class JfreeCandlesChartDemo extends JPanel {
                 .low(298.0)
                 .build(),
                 CandleMoex.builder()
-                        .begin(LocalDateTime.of(2024, 7, 11, 10, 0))
+                        .begin(LocalDateTime.of(2024, 7, 3, 10, 0))
                         .volume(154.1)
                         .close(302.1)
                         .open(299.5)
                         .high(302.4)
                         .low(297.0)
+                        .build(),
+                CandleMoex.builder()
+                        .begin(LocalDateTime.of(2024, 7, 4, 10, 0))
+                        .volume(135.1)
+                        .close(290.1)
+                        .open(302.5)
+                        .high(303.4)
+                        .low(287.0)
+                        .build(),
+                CandleMoex.builder()
+                        .begin(LocalDateTime.of(2024, 8, 1, 10, 0))
+                        .volume(135.1)
+                        .close(290.1)
+                        .open(302.5)
+                        .high(303.4)
+                        .low(287.0)
                         .build()
 
         );

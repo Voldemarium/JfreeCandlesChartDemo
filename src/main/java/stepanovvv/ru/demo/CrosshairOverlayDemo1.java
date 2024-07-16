@@ -44,9 +44,9 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
         this.chartPanel = new ChartPanel(chart);
         this.chartPanel.addChartMouseListener(this);
         CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
-        this.xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+        this.xCrosshair = new Crosshair(Double.NaN, Color.BLUE, new BasicStroke(0.2f));
         this.xCrosshair.setLabelVisible(true);
-        this.yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+        this.yCrosshair = new Crosshair(Double.NaN, Color.BLUE, new BasicStroke(0.2f));
         this.yCrosshair.setLabelVisible(true);
         crosshairOverlay.addDomainCrosshair(xCrosshair);
         crosshairOverlay.addRangeCrosshair(yCrosshair);
@@ -55,9 +55,8 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
     }
 
     private JFreeChart createChart(XYDataset dataset) {
-        JFreeChart chart = ChartFactory.createXYLineChart("Crosshair Demo",
-                "X", "Y", dataset, PlotOrientation.VERTICAL, false, true, true);
-        return chart;
+        return ChartFactory.createXYLineChart("Crosshair Demo",
+                "X", "Y", dataset, PlotOrientation.VERTICAL, false, false, true);
     }
 
     private XYDataset createDataset() {
@@ -65,8 +64,7 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
         for (int x = 0; x < 10; x++) {
             series.add(x, x + Math.random() * 4.0);
         }
-        XYSeriesCollection dataset = new XYSeriesCollection(series);
-        return dataset;
+        return new XYSeriesCollection(series);
     }
 
     @Override
@@ -88,14 +86,11 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                CrosshairOverlayDemo1 app = new CrosshairOverlayDemo1(
-                        "JFreeChart: CrosshairOverlayDemo1.java");
-                app.pack();
-                app.setVisible(true);
-            }
+        SwingUtilities.invokeLater(() -> {
+            CrosshairOverlayDemo1 app = new CrosshairOverlayDemo1(
+                    "JFreeChart: CrosshairOverlayDemo1.java");
+            app.pack();
+            app.setVisible(true);
         });
     }
 
