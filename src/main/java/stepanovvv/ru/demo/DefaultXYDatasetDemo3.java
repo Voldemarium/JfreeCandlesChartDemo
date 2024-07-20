@@ -1,32 +1,31 @@
 package stepanovvv.ru.demo;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.geom.Rectangle2D;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartMouseEvent;
-import org.jfree.chart.ChartMouseListener;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
+import org.jfree.chart.*;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import stepanovvv.ru.models.CandleMoex;
+import stepanovvv.ru.models.MockListCandles;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.List;
+
 import static org.jfree.data.general.DatasetUtils.findYValue;
 
 
 /**
  * A demo showing crosshairs that follow the data points on an XYPlot.
  */
-public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener {
+public class DefaultXYDatasetDemo3 extends JFrame implements ChartMouseListener {
 
     private ChartPanel chartPanel;
 
@@ -34,7 +33,7 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
 
     private Crosshair yCrosshair;
 
-    public CrosshairOverlayDemo1(String title) {
+    public DefaultXYDatasetDemo3(String title) {
         super(title);
         setContentPane(createContent());
     }
@@ -54,17 +53,19 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
         return chartPanel;
     }
 
-    private JFreeChart createChart(XYDataset dataset) {
+    private JFreeChart createChart(DefaultXYDataset dataset) {
         return ChartFactory.createXYLineChart("Crosshair Demo",
                 "X", "Y", dataset, PlotOrientation.VERTICAL, false, false, true);
     }
 
-    private XYDataset createDataset() {
-        XYSeries series = new XYSeries("S1");
-        for (int x = 0; x < 10; x++) {
-            series.add(x, x + Math.random() * 4.0);
-        }
-        return new XYSeriesCollection(series);
+    private DefaultXYDataset createDataset() {
+        DefaultXYDataset dataset = new DefaultXYDataset();
+        // Create candleMoexList
+        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+        //  Заполняем двумерный массив данных
+        double[][] data = new double[][] {{22.1, 22.2, 22.3, 22.5}, {1.3, 34.0, 45.3, 55.33}};
+        dataset.addSeries("Volume", data);
+        return dataset;
     }
 
     @Override
@@ -78,7 +79,6 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
         JFreeChart chart = event.getChart();
         XYPlot plot = (XYPlot) chart.getPlot();
         ValueAxis xAxis = plot.getDomainAxis();
-
         double x = xAxis.java2DToValue(event.getTrigger().getX(), dataArea,
                 RectangleEdge.BOTTOM);
         double y = findYValue(plot.getDataset(), 0, x);
@@ -88,7 +88,7 @@ public class CrosshairOverlayDemo1 extends JFrame implements ChartMouseListener 
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            CrosshairOverlayDemo1 app = new CrosshairOverlayDemo1(
+            DefaultXYDatasetDemo3 app = new DefaultXYDatasetDemo3(
                     "JFreeChart: CrosshairOverlayDemo1.java");
             app.pack();
             app.setVisible(true);
