@@ -2,18 +2,14 @@ package stepanovvv.ru.demo;
 
 import lombok.AllArgsConstructor;
 import stepanovvv.ru.candlestick.JfreeCandlesChart;
-import stepanovvv.ru.models.CandleMoex;
-import stepanovvv.ru.models.MockListCandles;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import java.util.List;
-
 @AllArgsConstructor
-public class JfreeCandlesChartDemo extends JPanel {
-    String ticker;
+public class JfreeCandlesChartDemo  {
+    private String ticker;
+    private boolean deletingHolidays;
 
     private void createAndShowGUI() {
         //Make sure we have nice window decorations.
@@ -24,15 +20,14 @@ public class JfreeCandlesChartDemo extends JPanel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Create and set up the chart.
-        JfreeCandlesChart jfreeCandlesChart = new JfreeCandlesChart(ticker);
+        JfreeCandlesChart jfreeCandlesChart = new JfreeCandlesChart(ticker, deletingHolidays);
 
-        // Create candleMoexList
-        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
-
-        // Добавляем свечи на графмк
-        jfreeCandlesChart.addCandles(candleMoexList);
-
-        frame.setContentPane(jfreeCandlesChart);
+        //Так добавляется JPanel, включающая в себя ChartPanel (при этом при изменении размера Frame с помощью мыши
+        // не будет меняться размер панели с графиками)
+//        frame.setContentPane(jfreeCandlesChart);
+        //Так добавляется ChartPanel (при этом при изменении размера Frame с помощью мыши
+        //  будет меняться размер панели с графиками)
+        frame.setContentPane(jfreeCandlesChart.getCommonChartPanel());
 
         //Disable the resizing feature
         frame.setResizable(true);
@@ -42,7 +37,7 @@ public class JfreeCandlesChartDemo extends JPanel {
     }
 
     public static void main(String[] args) {
-        JfreeCandlesChartDemo jfreeCandlestickChartDemo = new JfreeCandlesChartDemo("SBER");
+        JfreeCandlesChartDemo jfreeCandlestickChartDemo = new JfreeCandlesChartDemo("SBER", true);
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(jfreeCandlestickChartDemo::createAndShowGUI);
     }

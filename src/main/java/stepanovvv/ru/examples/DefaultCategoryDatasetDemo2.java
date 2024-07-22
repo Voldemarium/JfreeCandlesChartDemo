@@ -1,4 +1,4 @@
-package stepanovvv.ru.demo;
+package stepanovvv.ru.examples;
 
 import org.jfree.chart.*;
 import org.jfree.data.category.CategoryDataset;

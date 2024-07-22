@@ -1,4 +1,4 @@
-package stepanovvv.ru.demo;
+package stepanovvv.ru.examples;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.ValueAxis;
@@ -8,9 +8,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.xy.DefaultXYDataset;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
 
