@@ -1,4 +1,4 @@
-package stepanovvv.ru.examples;
+package stepanovvv.ru.examplesSwing2D;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -14,13 +14,16 @@ public class ChartAndButtons extends JPanel {
 
     public ChartAndButtons() {
         JPanel mockChartPanel = createMockChart();
+
         int gap = 3;
         JPanel buttonPanel = new JPanel(new GridLayout(1, 0, gap, gap));
+
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
         String[] buttonNames = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
         for (String buttonName : buttonNames) {
             buttonPanel.add(new JButton(buttonName));
         }
+        buttonPanel.add(new MyGraphics2DComponent());
 
         setLayout(new BorderLayout());
         add(mockChartPanel, BorderLayout.CENTER);
@@ -50,6 +53,8 @@ public class ChartAndButtons extends JPanel {
         JFrame frame = new JFrame("ChartAndButtons");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add(mainPanel);
+
+
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);

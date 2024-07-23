@@ -1,4 +1,4 @@
-package stepanovvv.ru.examples;
+package stepanovvv.ru.examplesCharts;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GradientPaint;

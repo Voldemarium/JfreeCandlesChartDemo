@@ -1,4 +1,4 @@
-package stepanovvv.ru.examples;
+package stepanovvv.ru.examplesCharts;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.ValueAxis;

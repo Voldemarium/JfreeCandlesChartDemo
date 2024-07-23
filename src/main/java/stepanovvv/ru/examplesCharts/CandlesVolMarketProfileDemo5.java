@@ -1,13 +1,10 @@
-package stepanovvv.ru.examples;
+package stepanovvv.ru.examplesCharts;
 
 import org.jfree.chart.*;
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.axis.*;
 import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.*;
-import org.jfree.chart.renderer.xy.CandlestickRenderer;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.*;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
@@ -16,7 +13,10 @@ import org.jfree.data.time.ohlc.OHLCSeries;
 import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
+import stepanovvv.ru.candlestick.MarketProfileRenderer;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
 import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
@@ -32,10 +32,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
+
 /**
  * A demo showing crosshairs that follow the data points on an XYPlot.
  */
-public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
+public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseListener {
     private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
     private final String offsetId = "+04:00";
@@ -51,7 +52,7 @@ public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
     private Crosshair xCrosshair;
 //    private Crosshair yCrosshair;
 
-    public CandlesAndBarsDemo5(String title) {
+    public CandlesVolMarketProfileDemo5(String title) {
         super(title);
         setContentPane(createContent(title));
     }
@@ -62,7 +63,7 @@ public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
         // Добавляем данные со свечей на таймсерию
         addCandles(candleMoexList);
 
-        JFreeChart chart1 = createChart2("Candles");
+        JFreeChart chart1 = createCandlesChart("Candles");
         JFreeChart chart2 = createVolumeChart("Volume");
 
         XYPlot plot1 = (XYPlot) chart1.getPlot();
@@ -90,6 +91,11 @@ public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
 
 
         this.chartPanel = new ChartPanel(commonChart);
+        // Устанавливаем размер панели с графиком по умолчанию
+        chartPanel.setPreferredSize(new Dimension(1600, 800));
+        // Enable zooming
+        chartPanel.setMouseZoomable(true);
+        chartPanel.setMouseWheelEnabled(true);
 
         this.chartPanel.addChartMouseListener(this);
         CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
@@ -130,21 +136,59 @@ public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
         return volumeChart;
     }
 
-    private JFreeChart createChart2(String chartTitle) {
+    private JFreeChart createCandlesChart(String chartTitle) {
         JFreeChart candlestickChart = ChartFactory.createCandlestickChart(chartTitle, "time", "Price",
                 ohlcDataSet, true);
+
+        // Create MarketProfile
+        // Create horizontal volume chart renderer (Создание средства визуализации горизонтальных объемов)
+        MarketProfileRenderer xyMarketProfileRenderer = new MarketProfileRenderer(); // Вид графика - бары (столбчатая диаграмма)
+        // При наведении курсора мыши на элемент графика показываем значение Y рядом с курсором
+        xyMarketProfileRenderer.setDefaultToolTipGenerator((xyDataset, i, i1) -> xyDataset.getY(i, i1).toString());
+        xyMarketProfileRenderer.setSeriesPaint(0, Color.cyan);
+
+        // add secondary axis
+        XYPlot plot = candlestickChart.getXYPlot();
+        plot.setDataset(1, createMarketProfileDataset());
+        NumberAxis axisX2 = new NumberAxis("VolPrice");
+        axisX2.setAutoRangeIncludesZero(false);
+        plot.setDomainAxis(1, axisX2);
+        plot.setDomainAxisLocation(1, AxisLocation.getOpposite(plot.getDomainAxisLocation(0)));
+        plot.setRenderer(1, xyMarketProfileRenderer);
+        plot.mapDatasetToDomainAxis(1, 1);
+
+
+
         // Create candlestick chart renderer (Создание средства визуализации свечных диаграмм)
         CandlestickRenderer candlestickRenderer = new CandlestickRenderer(
                 CandlestickRenderer.WIDTHMETHOD_AVERAGE,  // свечи средней ширины
                 false,                                    // обьем на графике со свечами не рисовать
                 // объект CustomHighLowItemLabelGenerator = чтобы всплывало окошко при наведении мышки на свечу
                 new CustomHighLowItemLabelGenerator(READABLE_DATE_FORMAT, new DecimalFormat("0.000")));
-        XYPlot plot = (XYPlot) candlestickChart.getPlot();
-        plot.setRenderer(candlestickRenderer);
+//        XYPlot plot = (XYPlot) candlestickChart.getPlot();
+        plot.setRenderer(0, candlestickRenderer);
         NumberAxis priceAxis = (NumberAxis) plot.getRangeAxis();
         priceAxis.setAutoRangeIncludesZero(false); // показывать ли диапазон значений начиная от НОЛ
 
         return candlestickChart;
+    }
+
+
+    private XYDataset createMarketProfileDataset() {
+        final XYSeries marketProfileSeries = new XYSeries("Series 2");
+        marketProfileSeries.add(10.0, 301.2);
+        marketProfileSeries.add(11.0, 300.5);
+        marketProfileSeries.add(12.0, 300.1);
+        marketProfileSeries.add(13.0, 299.7);
+        marketProfileSeries.add(15.0, 299.3);
+        marketProfileSeries.add(20.0, 297.3);
+        marketProfileSeries.add(25.0, 295.3);
+        marketProfileSeries.add(30.0, 294.3);
+        marketProfileSeries.add(25.0, 293.3);
+        marketProfileSeries.add(20.0, 292.3);
+        marketProfileSeries.add(17.0, 290.3);
+        return new XYSeriesCollection(marketProfileSeries);
+
     }
 
 
@@ -207,7 +251,7 @@ public class CandlesAndBarsDemo5 extends JFrame implements ChartMouseListener {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            CandlesAndBarsDemo5 app = new CandlesAndBarsDemo5(
+            CandlesVolMarketProfileDemo5 app = new CandlesVolMarketProfileDemo5(
                     "JFreeChart: CrosshairOverlayDemo5.java");
             app.pack();
             app.setVisible(true);

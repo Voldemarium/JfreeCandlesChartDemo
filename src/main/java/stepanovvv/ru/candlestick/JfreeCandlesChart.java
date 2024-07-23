@@ -2,6 +2,7 @@ package stepanovvv.ru.candlestick;
 
 import lombok.Getter;
 import org.jfree.chart.*;
+import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -18,6 +19,8 @@ import org.jfree.data.time.ohlc.OHLCSeries;
 import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
 import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
@@ -78,8 +81,9 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         commonCrosshairOverlay.addDomainCrosshair(xCrosshair);
         // Добавляем перекрестие на панель с общим графиком
         commonChartPanel.addOverlay(commonCrosshairOverlay);
-        // Добавляем панель с графиком в нашу панель (необязательно, только в случае ее использования без возможности
-        // уменьшать размер графиков изменением размера окна Frame)
+        // Добавляем панель с графиком org.jfree.chart.ChartPanel в нашу org.jfree.chart.ChartPanel панель
+        // (необязательно, только в случае ее использования без возможности уменьшать размер графиков
+        // изменением размера окна Frame)
         add(commonChartPanel);
     }
 
@@ -144,8 +148,44 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         plot.setBackgroundPaint(new Color(255, 227, 190, 100)); // Цвет фона свечного графика
         plot.setRenderer(candlestickRenderer);
         NumberAxis priceAxis = (NumberAxis) plot.getRangeAxis();
-        priceAxis.setAutoRangeIncludesZero(false); // показывать ли диапазон значений начиная от НОЛ
+        priceAxis.setAutoRangeIncludesZero(false); // показывать ли диапазон значений начиная от НОЛЯ
+
+        // Create MarketProfile
+        // Create horizontal volume chart renderer (Создание средства визуализации горизонтальных объемов)
+        MarketProfileRenderer xyMarketProfileRenderer = new MarketProfileRenderer(); // Вид графика - бары (столбчатая диаграмма)
+        // При наведении курсора мыши на элемент графика показываем значение Y рядом с курсором
+        xyMarketProfileRenderer.setDefaultToolTipGenerator((xyDataset, i, i1) -> xyDataset.getY(i, i1).toString());
+        xyMarketProfileRenderer.setSeriesPaint(0, Color.cyan);
+        xyMarketProfileRenderer.setShadowVisible(false); // не показывать тень
+
+        // add secondary axis
+//        XYPlot plot = candlestickChart.getXYPlot();
+        plot.setDataset(1, createMarketProfileDataset());
+        NumberAxis axisX2 = new NumberAxis("VolPrice");
+        axisX2.setAutoRangeIncludesZero(false);
+        plot.setDomainAxis(1, axisX2);
+        plot.setDomainAxisLocation(1, AxisLocation.getOpposite(plot.getDomainAxisLocation(0)));
+        plot.setRenderer(1, xyMarketProfileRenderer);
+        plot.mapDatasetToDomainAxis(1, 1);
         return candlestickChart;
+    }
+
+    private XYDataset createMarketProfileDataset() {
+        final XYSeries marketProfileSeries = new XYSeries("MarketProfile");
+        // Вычисление уровней по маркет профилю должно производится по актуальным данным (см. todo)
+        marketProfileSeries.add(10.0, 301.2);
+        marketProfileSeries.add(11.0, 300.5);
+        marketProfileSeries.add(12.0, 300.1);
+        marketProfileSeries.add(13.0, 299.7);
+        marketProfileSeries.add(15.0, 299.3);
+        marketProfileSeries.add(20.0, 297.3);
+        marketProfileSeries.add(25.0, 295.3);
+        marketProfileSeries.add(30.0, 294.3);
+        marketProfileSeries.add(25.0, 293.3);
+        marketProfileSeries.add(20.0, 292.3);
+        marketProfileSeries.add(17.0, 290.3);
+        return new XYSeriesCollection(marketProfileSeries);
+
     }
 
     private JFreeChart createVolumeChart(String chartTitle) {
@@ -324,7 +364,5 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
                 return DateTimeFormatter.ofPattern("dd.MM").format(localDate);
             });
         }
-
-
     }
 }

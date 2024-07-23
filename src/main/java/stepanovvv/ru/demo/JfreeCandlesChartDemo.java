@@ -22,10 +22,10 @@ public class JfreeCandlesChartDemo  {
         //Create and set up the chart.
         JfreeCandlesChart jfreeCandlesChart = new JfreeCandlesChart(ticker, deletingHolidays);
 
-        //Так добавляется JPanel, включающая в себя ChartPanel (при этом при изменении размера Frame с помощью мыши
-        // не будет меняться размер панели с графиками)
+        //Так добавляется  org.jfree.chart.ChartPanel, включающая в себя org.jfree.chart.ChartPanel (при этом при изменении
+        // размера Frame с помощью мыши не будет меняться размер панели с графиками)
 //        frame.setContentPane(jfreeCandlesChart);
-        //Так добавляется ChartPanel (при этом при изменении размера Frame с помощью мыши
+        //Так добавляется org.jfree.chart.ChartPanel (при этом при изменении размера Frame с помощью мыши
         //  будет меняться размер панели с графиками)
         frame.setContentPane(jfreeCandlesChart.getCommonChartPanel());
 
