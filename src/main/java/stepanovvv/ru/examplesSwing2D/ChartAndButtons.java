@@ -23,6 +23,7 @@ public class ChartAndButtons extends JPanel {
         for (String buttonName : buttonNames) {
             buttonPanel.add(new JButton(buttonName));
         }
+
         buttonPanel.add(new MyGraphics2DComponent());
 
         setLayout(new BorderLayout());
@@ -61,6 +62,6 @@ public class ChartAndButtons extends JPanel {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> createAndShowGui());
+        SwingUtilities.invokeLater(ChartAndButtons::createAndShowGui);
     }
 }

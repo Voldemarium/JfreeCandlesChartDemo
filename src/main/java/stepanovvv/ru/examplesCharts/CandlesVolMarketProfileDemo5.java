@@ -17,12 +17,15 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.candlestick.MarketProfileRenderer;
+import stepanovvv.ru.examlesjModelTests.MyPanelHi2;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
 import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Rectangle2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -54,7 +57,34 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
 
     public CandlesVolMarketProfileDemo5(String title) {
         super(title);
-        setContentPane(createContent(title));
+//        setContentPane(createContent(title));
+        this.add(createContent(title), BorderLayout.CENTER);
+        // Вспомогательная панель справа
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BorderLayout());
+
+        // Панель с кнопками для выбора стратегии
+        JPanel panel1 = new JPanel();
+        panel1.setPreferredSize(new Dimension(180,120));
+        panel1.add(new JLabel("-------------------------------"));
+        JButton buttonHi2 = new JButton("Hi2");
+        buttonHi2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {;
+                main(null);
+            }
+        });
+        panel1.add(buttonHi2);
+        panel1.add(new JButton("Another strategy"));
+        panel1.add(new JLabel("-------------------------------"));
+
+       // Панель внутри правой панели (верхняя)
+        JPanel myPanelHi2 = new MyPanelHi2();
+
+        rightPanel.add(panel1, BorderLayout.NORTH); // добавляем панель с кнопками в правую панель сверху
+        rightPanel.add(myPanelHi2, BorderLayout.CENTER); // добавляем панель в правую панель в центр
+        this.add(rightPanel, BorderLayout.EAST);    // добавляем правую панель справа
+
     }
 
     private JPanel createContent(String title) {
@@ -109,7 +139,6 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
         return chartPanel;
     }
 
-
     private JFreeChart createVolumeChart(String chartTitle) {
         // Создаем график фабричным методом
         JFreeChart volumeChart = ChartFactory.createTimeSeriesChart("Volume", "time",
@@ -156,7 +185,6 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
         plot.setDomainAxisLocation(1, AxisLocation.getOpposite(plot.getDomainAxisLocation(0)));
         plot.setRenderer(1, xyMarketProfileRenderer);
         plot.mapDatasetToDomainAxis(1, 1);
-
 
 
         // Create candlestick chart renderer (Создание средства визуализации свечных диаграмм)
