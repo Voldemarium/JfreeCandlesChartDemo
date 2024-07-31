@@ -21,6 +21,7 @@ import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import stepanovvv.ru.demo.Timeframe;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
 import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
@@ -58,9 +59,10 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
     private final Color crosshairColor = Color.GRAY;  // цвет линии перектрестия
 
 
-    public JfreeCandlesChart(String title, boolean deletingHolidays) {
+    public JfreeCandlesChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+                             Timeframe timeframe, boolean deletingHolidays) {
         // Create new chart
-        commonChart = createChart(title, deletingHolidays);
+        commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe, deletingHolidays);
         // Create new chart panel
         commonChartPanel = new ChartPanel(commonChart);
 
@@ -88,15 +90,23 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
     }
 
 
-    private JFreeChart createChart(String chartTitle, boolean deletingHolidays) {
+    private JFreeChart createCommonChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+                                         Timeframe timeframe, boolean deletingHolidays) {
         List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
-//        // Добавляем данные со свечей на таймсерии
+        // Добавляем данные со свечей на таймсерии
         addCandles(candleMoexList);
+        // Добавляем метрики Hi2, если график D1
+        if (timeframe == Timeframe.D1) {
+            addMetricsHi2(candleMoexList);
+        }
 
-       // 1. Создаем график свечей D1
+        // 1. Создаем график свечей
         JFreeChart candlesChart = createCandlesChart("Candles");
         // 2. Создаем график метрик Hi2
-        JFreeChart metricsHi2Chart = createMetricsHi2Chart("metrics Hi2 Chart");
+        JFreeChart metricsHi2Chart = null;
+        if (timeframe == Timeframe.D1) {
+            metricsHi2Chart = createMetricsHi2Chart("metrics Hi2 Chart");
+        }
         // 3. Создаем график объемов D1
         JFreeChart volumeChart = createVolumeChart("Volume chart");
 
@@ -116,13 +126,15 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         mainPlot.setGap(5.0); // Отступ между подграфиками
         //Добавление и установка пропорций размеров подграфиков
         mainPlot.add(candlesChart.getXYPlot(), 4);
-        mainPlot.add(metricsHi2Chart.getXYPlot(), 1);
+        if (metricsHi2Chart != null) {
+            mainPlot.add(metricsHi2Chart.getXYPlot(), 1);
+        }
         mainPlot.add(volumeChart.getXYPlot(), 1);
 
         // Ориентация графиков
         mainPlot.setOrientation(PlotOrientation.VERTICAL);
         // Построение общего графика
-        JFreeChart commonChart = new JFreeChart(chartTitle, JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
+        JFreeChart commonChart = new JFreeChart(ticker, JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
         commonChart.removeLegend();
 
         // Если нужно удалить с графика выходные дни (субботу и воскресение)
@@ -253,10 +265,27 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
 
     public void addCandles(List<CandleMoex> candleMoexList) {
         OHLCSeries ohlcSeries = new OHLCSeries("candles");
+        TimeSeries volumeSeries = new TimeSeries("volume");
+        // Добавляем свечи на графмк в цикле
+        for (int i = 0; i < candleMoexList.size(); i++) {
+            CandleMoex candleMoex = candleMoexList.get(i);
+            LocalDateTime dateTimeOpen = candleMoex.getBegin();
+            Date date = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
+            Day t = new Day(date);
+            // добавление свечи
+            ohlcSeries.add(t, candleMoex.getOpen(), candleMoex.getHigh(), candleMoex.getLow(), candleMoex.getClose());
+            // добавление объема на свече
+            volumeSeries.add(t, candleMoex.getVolume());
+        }
+        OHLCSeriesCollection candlestickDataset = new OHLCSeriesCollection();
+        candlestickDataset.addSeries(ohlcSeries);
+        ohlcDataSet = candlestickDataset;
+        volumeDataSet = new TimeSeriesCollection(volumeSeries);
+    }
+
+    public void addMetricsHi2(List<CandleMoex> candleMoexList) {
         TimeSeries buyMetricSeries = new TimeSeries("BUY");
         TimeSeries sellMetricSeries = new TimeSeries("SELL");
-        TimeSeries volumeSeries = new TimeSeries("volume");
-
         double prevBuy = 0;
         double prevSell = 0;
         // Добавляем свечи на графмк в цикле
@@ -265,11 +294,6 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
             LocalDateTime dateTimeOpen = candleMoex.getBegin();
             Date date = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
             Day t = new Day(date);
-
-            // добавление свечи
-            ohlcSeries.add(t, candleMoex.getOpen(), candleMoex.getHigh(), candleMoex.getLow(), candleMoex.getClose());
-            // добавление объема на свече
-            volumeSeries.add(t, candleMoex.getVolume());
             // добавление метрик
             if (i == 0) {
                 buyMetricSeries.add(t, candleMoex.getBuyMetric());
@@ -289,16 +313,11 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
             prevBuy = candleMoex.getBuyMetric();
             prevSell = candleMoex.getSellMetric();
         }
-        OHLCSeriesCollection candlestickDataset = new OHLCSeriesCollection();
-        candlestickDataset.addSeries(ohlcSeries);
-        ohlcDataSet = candlestickDataset;
-        volumeDataSet = new TimeSeriesCollection(volumeSeries);
         TimeSeriesCollection metricHi2Collection = new TimeSeriesCollection();
         metricHi2Collection.addSeries(buyMetricSeries);
         metricHi2Collection.addSeries(sellMetricSeries);
         metricHi2DataSet = metricHi2Collection;
     }
-
 
     @Override  // Что будет происходить при клике мышью
     public void chartMouseClicked(ChartMouseEvent event) {

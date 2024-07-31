@@ -3,6 +3,8 @@ package stepanovvv.ru.demo;
 import javax.swing.*;
 import javax.swing.text.DateFormatter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
@@ -15,12 +17,12 @@ import java.util.Date;
 
 public class PanelHi2 extends JPanel {
     // Данные списка
-    private final String[] dataList = {"Акции", "Фьючерсы", "Валюта"};
+    private final String[] dataList = {"Stocks", "Futures", "Currency"};
     private int selected1;
     private final String[][] dataText = {
-            {"1 уровень", "2 уровень", "3 уровень"},
-            {"1 уровень", "2 уровень", "3 уровень", "индексы", "товары", "валюта"},
-            {"1 уровень", "2 уровень"}
+            {"1 level", "2 level", "3 level"},
+            {"1 level", "2 level", "3 level", "индексы", "товары", "валюта"},
+            {"1 level", "2 level"}
     };
     private final String[][] stocksByLevels = {
             {"SBER (Сбербанк)", "ALRS (АО \"Алроса\")", "AFK (АО \"Система\")"},
@@ -42,8 +44,9 @@ public class PanelHi2 extends JPanel {
     private final JTextArea dateInfo;
     private final JFormattedTextField fromDatesField;
     private final JFormattedTextField tillDatesField;
-    private final JButton button;
-
+    private final JButton buttonD1_Hi2;
+    private final ButtonGroup timeFramebuttonGroup;
+    private final JButton buttonAddChart;
 
     public PanelHi2() {
         // Устанавливаем размер панели
@@ -95,7 +98,31 @@ public class PanelHi2 extends JPanel {
         JCheckBox checkBox2 = new JCheckBox("remove weekends");
 
         // 8. Создание кнопки отрисовки графиков
-        button = new JButton("Rendering");
+        buttonD1_Hi2 = new JButton("Rendering Hi2 D1");
+
+        timeFramebuttonGroup = new ButtonGroup();
+        JRadioButton button_M = new JRadioButton("M");
+        timeFramebuttonGroup.add(button_M);
+        JRadioButton button_W = new JRadioButton("W");
+        timeFramebuttonGroup.add(button_W);
+        JRadioButton button_D1 = new JRadioButton("D1");
+        timeFramebuttonGroup.add(button_D1);
+        JRadioButton button_H4 = new JRadioButton("H4");
+        timeFramebuttonGroup.add(button_H4);
+        JRadioButton button_H1 = new JRadioButton("H1");
+        timeFramebuttonGroup.add(button_H1);
+        JRadioButton button_M30 = new JRadioButton("M30");
+        timeFramebuttonGroup.add(button_M30);
+        JRadioButton button_M15 = new JRadioButton("M15");
+        timeFramebuttonGroup.add(button_M15);
+        JRadioButton button_M10 = new JRadioButton("M10");
+        timeFramebuttonGroup.add(button_M10);
+        JRadioButton button_M5 = new JRadioButton("M5");
+        timeFramebuttonGroup.add(button_M5);
+        JRadioButton button_M1 = new JRadioButton("M1");
+        timeFramebuttonGroup.add(button_M1);
+
+        buttonAddChart = new JButton("add chart");
 
         // Подключение слушателя мыши на первый список
         list1.addMouseListener(new MouseAdapter() {
@@ -153,28 +180,72 @@ public class PanelHi2 extends JPanel {
             }
         });
 
-        // Подключение слушателя мыши на кнопку
-        button.addActionListener(e -> {
+        // Подключение слушателя мыши на кнопку запуска графика D1
+        buttonD1_Hi2.addActionListener(e -> {
             // Действие при нажатии кнопки
             // Получение тикера инструмента
-            String selectedTicker = Arrays.stream(list3.getSelectedValue().split(" "))
-                    .findFirst().orElse(null);
-            // Получение дат инструмента
-            Date fromDate = (Date) fromDatesField.getValue();
-            Date tillDate = (Date) tillDatesField.getValue();
-            LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
-            LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
-            System.out.println(selectedTicker);
-            System.out.println(fromLocalDate);
-            System.out.println(tillLocalDate);
-             //Запуск программы с н
-             if (checkBox2.isSelected()) { //если выбрано без выходных дней
-
-             } else {
-
-             }
-
+            String selected = list3.getSelectedValue();
+            if (selected != null) {
+                String selectedTicker = Arrays.stream(selected.split(" ")).findFirst().orElse(null);
+                // Получение дат инструмента
+                Date fromDate = (Date) fromDatesField.getValue();
+                Date tillDate = (Date) tillDatesField.getValue();
+                LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
+                LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
+                //Запуск программы с выбранными на панели параметрами
+                JfreeChartHi2.addChart(selectedTicker, fromLocalDate, tillLocalDate, Timeframe.D1,
+                        checkBox2.isSelected());
+            } else {
+                //  всплывающее окно-подсказка "Выберите инструмент!"
+                System.out.println("Выберите инструмент");
+            }
         });
+
+
+        buttonAddChart.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Timeframe timeframe = null;
+                if (button_M.isSelected()) {
+                    timeframe = Timeframe.M;
+                } else if (button_W.isSelected()) {
+                    timeframe = Timeframe.W;
+                } else if (button_D1.isSelected()) {
+                    timeframe = Timeframe.D1;
+                } else if (button_H4.isSelected()) {
+                    timeframe = Timeframe.H4;
+                } else if (button_H1.isSelected()) {
+                    timeframe = Timeframe.H1;
+                } else if (button_M30.isSelected()) {
+                    timeframe = Timeframe.M30;
+                } else if (button_M15.isSelected()) {
+                    timeframe = Timeframe.M30;
+                } else if (button_M10.isSelected()) {
+                    timeframe = Timeframe.M10;
+                } else if (button_M5.isSelected()) {
+                    timeframe = Timeframe.M5;
+                } else if (button_M1.isSelected()) {
+                    timeframe = Timeframe.M1;
+                }
+                // Получение тикера инструмента
+                String selected = list3.getSelectedValue();
+                if (selected != null) {
+                    String selectedTicker = Arrays.stream(selected.split(" ")).findFirst().orElse(null);
+                    // Получение дат инструмента
+                    Date fromDate = (Date) fromDatesField.getValue();
+                    Date tillDate = (Date) tillDatesField.getValue();
+                    LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
+                    LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
+                    //Запуск программы с выбранными на панели параметрами
+                    JfreeChartHi2.addChart(selectedTicker, fromLocalDate, tillLocalDate, timeframe,
+                            checkBox2.isSelected());
+                } else {
+                    //  всплывающее окно-подсказка "Выберите инструмент!"
+                    System.out.println("Выберите инструмент");
+                }
+            }
+        });
+
 
         // Размещение компонентов в интерфейсе панели
         add(new Label("STRATEGY Hi2"));
@@ -188,7 +259,18 @@ public class PanelHi2 extends JPanel {
         add(new JLabel("    till "));
         add(tillDatesField);
         add(checkBox2);
-        add(button);
+        add(buttonD1_Hi2);
+        add(button_M);
+        add(button_W);
+        add(button_D1);
+        add(button_H4);
+        add(button_H1);
+        add(button_M30);
+        add(button_M15);
+        add(button_M10);
+        add(button_M5);
+        add(button_M1);
+        add(buttonAddChart);
         setVisible(true);
     }
 }

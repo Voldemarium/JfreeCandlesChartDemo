@@ -16,7 +16,7 @@ import javax.swing.text.DateFormatter;
 
 public class MyPanelHi2 extends JPanel {
     // Данные списка
-    private final String[] dataList = {"Акции", "Фьючерсы", "Валюта"};
+    private final String[] dataList = {"Stocks", "Futures", "Currency"};
     private int selected1;
     private final String[][] dataText = {
             {"1 уровень", "2 уровень", "3 уровень"},
