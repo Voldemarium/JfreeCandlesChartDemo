@@ -40,7 +40,7 @@ import java.util.Date;
 import java.util.List;
 
 @Getter
-public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
+public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     // Формат времени для считывания данных из объекта свечи
     private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
@@ -59,10 +59,11 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
     private final Color crosshairColor = Color.GRAY;  // цвет линии перектрестия
 
 
-    public JfreeCandlesChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                             Timeframe timeframe, boolean deletingHolidays) {
+    public JfreeChartPanel(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+                           Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         // Create new chart
-        commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe, deletingHolidays);
+        commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe,
+                deletingHolidays, volume, marketProfile);
         // Create new chart panel
         commonChartPanel = new ChartPanel(commonChart);
 
@@ -91,24 +92,28 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
 
 
     private JFreeChart createCommonChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                                         Timeframe timeframe, boolean deletingHolidays) {
+                                         Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
         // Добавляем данные со свечей на таймсерии
         addCandles(candleMoexList);
         // Добавляем метрики Hi2, если график D1
-        if (timeframe == Timeframe.D1) {
+        if (timeframe == Timeframe.D1_Hi2) {
             addMetricsHi2(candleMoexList);
         }
 
         // 1. Создаем график свечей
-        JFreeChart candlesChart = createCandlesChart("Candles");
+        JFreeChart candlesChart = createCandlesChart("Candles", marketProfile);
         // 2. Создаем график метрик Hi2
         JFreeChart metricsHi2Chart = null;
-        if (timeframe == Timeframe.D1) {
+        if (timeframe == Timeframe.D1_Hi2) {
             metricsHi2Chart = createMetricsHi2Chart("metrics Hi2 Chart");
         }
+
         // 3. Создаем график объемов D1
-        JFreeChart volumeChart = createVolumeChart("Volume chart");
+        JFreeChart volumeChart = null;
+        if (volume) {
+            volumeChart = createVolumeChart("Volume chart");
+        }
 
         // 4. Создаем основной график диаграммы с тремя подграфиками (candlestickSubplot,VolumeSubplot, buySellMetricSubplot)
         //		и одной общей осью времени dateAxis
@@ -129,7 +134,10 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         if (metricsHi2Chart != null) {
             mainPlot.add(metricsHi2Chart.getXYPlot(), 1);
         }
-        mainPlot.add(volumeChart.getXYPlot(), 1);
+
+        if (volumeChart != null) {
+            mainPlot.add(volumeChart.getXYPlot(), 1);
+        }
 
         // Ориентация графиков
         mainPlot.setOrientation(PlotOrientation.VERTICAL);
@@ -146,10 +154,11 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         return commonChart;
     }
 
-    private JFreeChart createCandlesChart(String chartTitle) {
+    private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile) {
         // Создаем график фабричным методом
         JFreeChart candlestickChart = ChartFactory.createCandlestickChart(chartTitle, "time", "Price",
                 ohlcDataSet, true);
+
         // Create candlestick chart renderer (Создание средства визуализации свечных диаграмм)
         CandlestickRenderer candlestickRenderer = new CandlestickRenderer(
                 CandlestickRenderer.WIDTHMETHOD_AVERAGE,  // свечи средней ширины
@@ -162,23 +171,26 @@ public class JfreeCandlesChart extends JPanel implements ChartMouseListener {
         NumberAxis priceAxis = (NumberAxis) plot.getRangeAxis();
         priceAxis.setAutoRangeIncludesZero(false); // показывать ли диапазон значений начиная от НОЛЯ
 
-        // Create MarketProfile
-        // Create horizontal volume chart renderer (Создание средства визуализации горизонтальных объемов)
-        MarketProfileRenderer xyMarketProfileRenderer = new MarketProfileRenderer(); // Вид графика - бары (столбчатая диаграмма)
-        // При наведении курсора мыши на элемент графика показываем значение Y рядом с курсором
-        xyMarketProfileRenderer.setDefaultToolTipGenerator((xyDataset, i, i1) -> xyDataset.getY(i, i1).toString());
-        xyMarketProfileRenderer.setSeriesPaint(0, Color.cyan);
-        xyMarketProfileRenderer.setShadowVisible(false); // не показывать тень
+        if (marketProfile) {
+            // Create MarketProfile
+            // Create horizontal volume chart renderer (Создание средства визуализации горизонтальных объемов)
+            MarketProfileRenderer xyMarketProfileRenderer = new MarketProfileRenderer(); // Вид графика - бары (столбчатая диаграмма)
+            // При наведении курсора мыши на элемент графика показываем значение Y рядом с курсором
+            xyMarketProfileRenderer.setDefaultToolTipGenerator((xyDataset, i, i1) -> xyDataset.getY(i, i1).toString());
+            xyMarketProfileRenderer.setSeriesPaint(0, Color.cyan);
+            xyMarketProfileRenderer.setShadowVisible(false); // не показывать тень
 
-        // add secondary axis
+            // add secondary axis
 //        XYPlot plot = candlestickChart.getXYPlot();
-        plot.setDataset(1, createMarketProfileDataset());
-        NumberAxis axisX2 = new NumberAxis("VolPrice");
-        axisX2.setAutoRangeIncludesZero(false);
-        plot.setDomainAxis(1, axisX2);
-        plot.setDomainAxisLocation(1, AxisLocation.getOpposite(plot.getDomainAxisLocation(0)));
-        plot.setRenderer(1, xyMarketProfileRenderer);
-        plot.mapDatasetToDomainAxis(1, 1);
+            plot.setDataset(1, createMarketProfileDataset());
+            NumberAxis axisX2 = new NumberAxis("VolPrice");
+            axisX2.setAutoRangeIncludesZero(false);
+            plot.setDomainAxis(1, axisX2);
+            plot.setDomainAxisLocation(1, AxisLocation.getOpposite(plot.getDomainAxisLocation(0)));
+            plot.setRenderer(1, xyMarketProfileRenderer);
+            plot.mapDatasetToDomainAxis(1, 1);
+        }
+
         return candlestickChart;
     }
 

@@ -4,9 +4,7 @@ import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class PanelHi2 extends StrategyPanel{
-    protected final JButton buttonFutureSpread_Strategy;
-
+public class PanelFutureSpread extends StrategyPanel{
     private final String[][] stocksByLevels = {
             {"SBER (Сбербанк)", "ALRS (АО \"Алроса\")", "AFK (АО \"Система\")"},
             {"AFK (АО \"Система\")", "JHHS", "UUYUY"},
@@ -25,22 +23,19 @@ public class PanelHi2 extends StrategyPanel{
             {"CHFRUB", "GBRRUB", "BYNRUB"}
     };
 
-    public PanelHi2() {
-        super();
-        buttonFutureSpread_Strategy = new JButton("FutureSpread_Strategy");
-        buttonFutureSpread_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"Future Spread"}));
-        add(buttonFutureSpread_Strategy);
-        setVisible(true);
+    public PanelFutureSpread() {
+      super();
+      setVisible(true);
     }
 
     @Override
     StrategyName setStrategyName() {
-        return StrategyName.SRATEGY_Hi2;
+        return StrategyName.STRATEGY_FUTURE_SPREAD;
     }
 
     @Override
     String[] setDataList1() {
-        return new String[] {"Stocks", "Futures", "Currency"};
+        return new String[] {"Indexes", "Indexes futures", "Stocks", "Stocks Futures"};
     }
 
     @Override
@@ -86,4 +81,5 @@ public class PanelHi2 extends StrategyPanel{
             }
         });
     }
+
 }
