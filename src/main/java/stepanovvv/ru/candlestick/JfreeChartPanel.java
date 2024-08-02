@@ -21,10 +21,10 @@ import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import stepanovvv.ru.demo.Timeframe;
+import stepanovvv.ru.strategyPanel.Timeframe;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
-import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
+import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,7 +93,11 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 
     private JFreeChart createCommonChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                                          Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
+
+        // Достаем данные из Мосбиржи по ticker, fromLocalDate, tillLocalDate, timeframe
         List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+
+
         // Добавляем данные со свечей на таймсерии
         addCandles(candleMoexList);
         // Добавляем метрики Hi2, если график D1
@@ -150,7 +154,6 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
             SegmentedTimeline timeline = SegmentedTimeline.newMondayThroughFridayTimeline();
             dateAxis.setTimeline(timeline);
         }
-
         return commonChart;
     }
 
@@ -209,7 +212,6 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         marketProfileSeries.add(20.0, 292.3);
         marketProfileSeries.add(17.0, 290.3);
         return new XYSeriesCollection(marketProfileSeries);
-
     }
 
     private JFreeChart createVolumeChart(String chartTitle) {
@@ -236,10 +238,10 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         JFreeChart metricsHi2Chart = ChartFactory.createTimeSeriesChart(chartTitle, "time",
                 "MetricsHi2", metricHi2DataSet);
 
-        NumberAxis buy_sellMetricAxis = new NumberAxis("BUY/SELL_metric");
-        buy_sellMetricAxis.setAutoRangeIncludesZero(true);    // показывать ли диапазон значений начиная от НОЛЯ
+        NumberAxis buySell_MetricAxis = new NumberAxis("BUY/SELL_metric");
+        buySell_MetricAxis.setAutoRangeIncludesZero(true);    // показывать ли диапазон значений начиная от НОЛЯ
         // Set to no decimal
-        buy_sellMetricAxis.setNumberFormatOverride(new DecimalFormat("0"));
+        buySell_MetricAxis.setNumberFormatOverride(new DecimalFormat("0"));
 
         // Create metric chart renderer (Создание средства визуализации - линий с точками)
 //        XYBezierRenderer timeRenderer_Buy_Sell = new XYBezierRenderer();
@@ -273,7 +275,6 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         plot.setBackgroundPaint(new Color(255, 227, 190, 100)); // Цвет фона графика
         return metricsHi2Chart;
     }
-
 
     public void addCandles(List<CandleMoex> candleMoexList) {
         OHLCSeries ohlcSeries = new OHLCSeries("candles");

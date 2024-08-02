@@ -1,4 +1,4 @@
-package stepanovvv.ru.examplesCharts;
+package stepanovvv.ru.examples.examplesCharts;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.DateAxis;
@@ -16,7 +16,7 @@ import org.jfree.data.xy.*;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
-import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
+import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
 import java.awt.*;

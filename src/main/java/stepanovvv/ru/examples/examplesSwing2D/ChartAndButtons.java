@@ -1,4 +1,4 @@
-package stepanovvv.ru.examplesSwing2D;
+package stepanovvv.ru.examples.examplesSwing2D;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

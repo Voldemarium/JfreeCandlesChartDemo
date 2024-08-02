@@ -1,4 +1,4 @@
-package stepanovvv.ru.examlesjModelTests;
+package stepanovvv.ru.examples.examlesModelTests.examlesModelTests;
 
 // Пример использования поля JFormattedTextField
 import javax.swing.*;

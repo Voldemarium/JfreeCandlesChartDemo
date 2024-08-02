@@ -1,4 +1,6 @@
-package stepanovvv.ru.demo;
+package stepanovvv.ru.strategyPanel;
+
+import stepanovvv.ru.MyTerminal;
 
 import javax.swing.*;
 import javax.swing.text.DateFormatter;
@@ -14,7 +16,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 public abstract class StrategyPanel extends JPanel {
-    protected  StrategyName strategyName;
+    protected StrategyName strategyName;
     protected int selected1;
     protected String[] dataList1;
     protected String[][] dataList2;
@@ -30,16 +32,16 @@ public abstract class StrategyPanel extends JPanel {
         dataList1 = setDataList1();
         dataList2 = setDataList2();
 
-        // Устанавливаем размер панели
-        this.setPreferredSize(new Dimension(180, 500));
+        // Устанавливаем размер панели (заданные здесь ее размеры будут определять размеры всего окна Frame)
+        this.setPreferredSize(new Dimension(180, 950));
 
-        // 1. Создание списка 1 выбора типов инструментов (через абстрактный метд)
+        // 1. Создание списка 1 выбора типов инструментов (через абстрактный метод)
         final JList<String> list1 = getStringJList1();
 
         // 2. Создание списка 2 выбора типов инструментов
         final JList<String> list2 = new JList<>();
         //Метод setPrototypeCellValue() позволяет определить ширину JList по длине указанной строки.
-        list2.setPrototypeCellValue("level 1");
+        list2.setPrototypeCellValue("МСК_недвижимость");
         list2.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Выделение одного элемента списка.
 
         // 3. Кнопка выбора сортировки инструментов
@@ -146,7 +148,7 @@ public abstract class StrategyPanel extends JPanel {
                         checkBox2.isSelected(), checkBox3.isSelected(), checkBox4.isSelected());
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
-                System.out.println("Выберите инструмент");
+                WrongMove.main(null);
             }
         });
 
@@ -187,12 +189,12 @@ public abstract class StrategyPanel extends JPanel {
                         checkBox2.isSelected(), checkBox3.isSelected(), checkBox4.isSelected());
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
-                System.out.println("Выберите инструмент");
+                WrongMove.main(null);
             }
         });
 
         // Размещение компонентов в интерфейсе панели
-        add(new Label( "  " + strategyName + "  "));
+        add(new Label("  " + strategyName + "  "));
         add(new JScrollPane(list1));
         add(new JScrollPane(list2));
         add(checkBox1);
@@ -220,16 +222,13 @@ public abstract class StrategyPanel extends JPanel {
         add(button_M5);
         add(button_M1);
         add(buttonAddChart);
-//        setVisible(true);
+        setVisible(true);
     }
 
-    abstract StrategyName setStrategyName();
-    
-    abstract String[] setDataList1();
-
-    abstract String[][] setDataList2();
-
-    abstract JList<String> getStringJList1();
+    public abstract StrategyName setStrategyName();
+    public abstract String[] setDataList1();
+    public abstract String[][] setDataList2();
+    public abstract JList<String> getStringJList1();
 
     private void addList1ListenerMoise(JList<String> list1, JList<String> list2, String[][] dataList2) {
         list1.addMouseListener(new MouseAdapter() {

@@ -48,7 +48,7 @@
  *
  */
 
-package stepanovvv.ru.oldJFreecart;
+package stepanovvv.ru.candlestick.oldJFreecart;
 
 import org.jfree.chart.axis.Timeline;
 

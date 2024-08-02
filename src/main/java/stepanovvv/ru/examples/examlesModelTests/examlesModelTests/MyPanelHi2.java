@@ -1,4 +1,4 @@
-package stepanovvv.ru.examlesjModelTests;
+package stepanovvv.ru.examples.examlesModelTests.examlesModelTests;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;

@@ -1,4 +1,4 @@
-package stepanovvv.ru.examplesCharts;
+package stepanovvv.ru.examples.examplesCharts;
 
 import java.awt.BasicStroke;
 import java.awt.Color;

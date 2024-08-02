@@ -1,4 +1,4 @@
-package stepanovvv.ru.examplesCharts;
+package stepanovvv.ru.examples.examplesCharts;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
@@ -17,10 +17,10 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.candlestick.MarketProfileRenderer;
-import stepanovvv.ru.examlesjModelTests.MyPanelHi2;
+import stepanovvv.ru.examples.examlesModelTests.examlesModelTests.MyPanelHi2;
 import stepanovvv.ru.models.CandleMoex;
 import stepanovvv.ru.models.MockListCandles;
-import stepanovvv.ru.oldJFreecart.SegmentedTimeline;
+import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
 import java.awt.*;
