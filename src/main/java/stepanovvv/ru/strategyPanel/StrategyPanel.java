@@ -41,7 +41,7 @@ public abstract class StrategyPanel extends JPanel {
         // 2. Создание списка 2 выбора типов инструментов
         final JList<String> list2 = new JList<>();
         //Метод setPrototypeCellValue() позволяет определить ширину JList по длине указанной строки.
-        list2.setPrototypeCellValue("МСК_недвижимость");
+        list2.setPrototypeCellValue("МСК_недвижимость");             // задаем длину строки
         list2.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Выделение одного элемента списка.
 
         // 3. Кнопка выбора сортировки инструментов
@@ -50,7 +50,7 @@ public abstract class StrategyPanel extends JPanel {
         // 4. Создание списка 3 выбора типов инструментов
         final JList<String> list3 = new JList<>();
         //Метод setPrototypeCellValue() позволяет определить ширину JList по длине указанной строки.
-        list3.setPrototypeCellValue("SBER (Сбербанк)aaaaa");
+        list3.setPrototypeCellValue("SBER (Сбербанк)aaaaa");         // задаем длину строки
         list3.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Выделение одного элемента списка.
 
         // 5. Создание текстового поля для выбора инструментов
