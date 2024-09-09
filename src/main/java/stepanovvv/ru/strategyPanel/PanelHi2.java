@@ -2,6 +2,7 @@ package stepanovvv.ru.strategyPanel;
 
 import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.MyTerminal;
+import stepanovvv.ru.models.FutureMoex;
 import stepanovvv.ru.models.StockMoex;
 import stepanovvv.ru.repository.api_mosExchange.ServerRepository;
 
@@ -22,6 +23,7 @@ public class PanelHi2 extends StrategyPanel {
 
     private final List<List<StockMoex>> stockListByLevels = new ArrayList<>();
     private final List<List<StockMoex>> futuresStocksByLevels = new ArrayList<>();
+
     private final List<List<StockMoex>> currentsByLevels = new ArrayList<>();
 
     //    private final String[][] futuresStocksByLevels;
@@ -64,6 +66,15 @@ public class PanelHi2 extends StrategyPanel {
     }
 
     public String[][] setFuturesStocksByLevels() {
+        // Список всех фьючерсов, по которым Мосбиржа ведет расчет метрик HI2
+        List<FutureMoex> allFutures = repository.getFuturesForHi2();
+        // Фильтрация фьючерсов на акции, индексные, товарные и валютные
+
+        // Фильтрация фьючерсов на акции по уровням листинга
+
+
+
+
         return new String[][]{
                 {"FSBER (Сбербанк)", "FALRS (АО \"Алроса\")", "FAFK (АО \"Система\")"}, // раскр. list2[1][0] - level 1
                 {"FAFK (АО \"Система\")", "FJHHS", "FUUYUY"},                          // раскр. list2[1][1] - level 2

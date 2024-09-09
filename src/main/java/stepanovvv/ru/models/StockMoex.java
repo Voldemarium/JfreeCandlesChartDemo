@@ -6,7 +6,12 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+// Названия всех колонок по акциям:
+// https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/columns.html
+// Пример для акций ВТБ-------------------------------------
+// https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/VTBR.html
 @JsonPropertyOrder({ // порядок при сериализации
+
         "SECID",
         "SHORTNAME",
         "SECNAME",
