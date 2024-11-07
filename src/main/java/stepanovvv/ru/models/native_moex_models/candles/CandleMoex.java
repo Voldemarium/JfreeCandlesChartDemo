@@ -1,4 +1,4 @@
-package stepanovvv.ru.models;
+package stepanovvv.ru.models.native_moex_models.candles;
 
 import lombok.Builder;
 import lombok.Data;

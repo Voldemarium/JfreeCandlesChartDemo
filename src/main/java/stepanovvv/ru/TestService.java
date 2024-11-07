@@ -1,7 +1,7 @@
 package stepanovvv.ru;
 
 import lombok.extern.slf4j.Slf4j;
-import stepanovvv.ru.models.StockMoex;
+import stepanovvv.ru.models.native_moex_models.instrument_info.StockMoex;
 import stepanovvv.ru.repository.api_mosExchange.ServerRepository;
 
 import java.util.List;

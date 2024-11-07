@@ -2,8 +2,9 @@ package stepanovvv.ru.strategyPanel;
 
 import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.MyTerminal;
-import stepanovvv.ru.models.FutureMoex;
-import stepanovvv.ru.models.StockMoex;
+import stepanovvv.ru.models.native_moex_models.instrument_info.FutureMoex;
+import stepanovvv.ru.models.native_moex_models.instrument_info.StockMoex;
+import stepanovvv.ru.models.toolsInfo.StockInfo;
 import stepanovvv.ru.repository.api_mosExchange.ServerRepository;
 
 import javax.swing.*;
@@ -21,10 +22,11 @@ public class PanelHi2 extends StrategyPanel {
             {"1 level", "2 level", "3 level", "индексы", "товары", "валюта"}, // раскрытие list1[1] - "Futures"
             {"1 level", "2 level"}};                                          // раскрытие list1[2] - "Currency"
 
-    private final List<List<StockMoex>> stockListByLevels = new ArrayList<>();
-    private final List<List<StockMoex>> futuresStocksByLevels = new ArrayList<>();
+    //    private final List<List<StockMoex>> stockListByLevels = new ArrayList<>();
+    private final List<List<StockInfo>> stockListByLevels = new ArrayList<>();
+    private final List<List<FutureMoex>> futuresByLevels = new ArrayList<>();
 
-    private final List<List<StockMoex>> currentsByLevels = new ArrayList<>();
+    private final List<List<FutureMoex>> currentsByLevels = new ArrayList<>();
 
     //    private final String[][] futuresStocksByLevels;
 //    private final String[][] currentsByLevels;
@@ -48,16 +50,16 @@ public class PanelHi2 extends StrategyPanel {
 
     public void setStocksByLevels() {
         // Список всех акций, по которым Мосбиржа ведет расчет метрик HI2
-        List<StockMoex> allStocks = repository.getStocksForHi2();
+        List<StockInfo> allStocksInfo = repository.getStocksInfoForHi2();
         // Фильтрация акций по уровням листинга
-        List<StockMoex> stocksListLevel1 = allStocks.stream()
-                .filter(stockMoex -> stockMoex.getListLevel() == 1)
+        List<StockInfo> stocksListLevel1 = allStocksInfo.stream()
+                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 1)
                 .toList();
-        List<StockMoex> stocksListLevel2 = allStocks.stream()
-                .filter(stockMoex -> stockMoex.getListLevel() == 2)
+        List<StockInfo> stocksListLevel2 = allStocksInfo.stream()
+                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 2)
                 .toList();
-        List<StockMoex> stocksListLevel3 = allStocks.stream()
-                .filter(stockMoex -> stockMoex.getListLevel() == 3)
+        List<StockInfo> stocksListLevel3 = allStocksInfo.stream()
+                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 3)
                 .toList();
         // Добавление отфильтрованных акций в список (список списков)
         stockListByLevels.add(stocksListLevel1);
@@ -71,8 +73,6 @@ public class PanelHi2 extends StrategyPanel {
         // Фильтрация фьючерсов на акции, индексные, товарные и валютные
 
         // Фильтрация фьючерсов на акции по уровням листинга
-
-
 
 
         return new String[][]{
@@ -127,7 +127,7 @@ public class PanelHi2 extends StrategyPanel {
                             // либо  по объему торгов (ликвидности)
 
                             // Создаем копию выбранного по уровню списка акций
-                            List<StockMoex> listStocks = new ArrayList<>(stockListByLevels.get(selected2));
+                            List<StockInfo> listStocks = new ArrayList<>(stockListByLevels.get(selected2));
                             //Создаем список названий акций
                             String[] stocksArrayLevel = new String[stockListByLevels.get(selected2).size()];
                             if (checkBox1.isSelected()) { // если выбрана сортировка по ликвидности
@@ -137,7 +137,8 @@ public class PanelHi2 extends StrategyPanel {
                             }
                             // если не выбрана сортировка по ликвидности (то будет по алфавиту)
                             listStocks.stream()
-                                    .map(stockMoex -> stockMoex.getSecId() + " (" + stockMoex.getShortName() + ")")
+                                    .map(stockInfo -> stockInfo.getStockMoex().getSecId() + " (" +
+                                            stockInfo.getStockMoex().getShortName() + ")")
                                     .toList().toArray(stocksArrayLevel);
                             list3.setListData(stocksArrayLevel);
                             break;

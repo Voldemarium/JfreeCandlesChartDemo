@@ -18,8 +18,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.candlestick.MarketProfileRenderer;
 import stepanovvv.ru.examples.examlesModelTests.examlesModelTests.MyPanelHi2;
-import stepanovvv.ru.models.CandleMoex;
-import stepanovvv.ru.models.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
 import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;

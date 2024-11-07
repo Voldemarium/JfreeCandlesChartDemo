@@ -8,8 +8,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.xy.DefaultXYDataset;
-import stepanovvv.ru.models.CandleMoex;
-import stepanovvv.ru.models.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package stepanovvv.ru.models;
+package stepanovvv.ru.models.native_moex_models.instrument_info;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,7 +11,6 @@ import java.time.LocalDate;
 // Пример для акций ВТБ-------------------------------------
 // https://iss.moex.com/iss/engines/stock/markets/shares/boards/TQBR/securities/VTBR.html
 @JsonPropertyOrder({ // порядок при сериализации
-
         "SECID",
         "SHORTNAME",
         "SECNAME",

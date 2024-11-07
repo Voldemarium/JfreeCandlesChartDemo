@@ -14,8 +14,8 @@ import org.jfree.data.time.ohlc.OHLCSeries;
 import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jfree.data.xy.*;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
-import stepanovvv.ru.models.CandleMoex;
-import stepanovvv.ru.models.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
 import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
