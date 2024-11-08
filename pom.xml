@@ -7,8 +7,9 @@
     <groupId>stepanovvv.ru</groupId>
     <artifactId>mycandleschart</artifactId>
     <version>1.0-SNAPSHOT</version>
-
+<!---->
     <properties>
+        <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -59,16 +60,17 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <finalName>${project.name}</finalName>
                     <archive>
                         <manifest>
-                            <mainClass>com.fx.jfree.chart.demo.JfreeCandlesChartDemo</mainClass>
+                            <mainClass>stepanovvv.ru.MyTerminal</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>${project.name}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
+
                 </configuration>
             </plugin>
         </plugins>

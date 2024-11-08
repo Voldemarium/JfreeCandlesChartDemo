@@ -59,8 +59,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     private final Color crosshairColor = Color.GRAY;  // цвет линии перектрестия
 
 
-    public
-    JfreeChartPanel(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+    public JfreeChartPanel(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                            Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         // Create new chart
         commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe,

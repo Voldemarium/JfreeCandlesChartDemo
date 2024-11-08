@@ -1,4 +1,4 @@
-package stepanovvv.ru.strategyPanel;
+package stepanovvv.ru.pop_up_warnings;
 
 //Вплывающее диалоговое окно-подсказка
 

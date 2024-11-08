@@ -3,8 +3,9 @@ package stepanovvv.ru.strategyPanel;
 import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.MyTerminal;
 import stepanovvv.ru.models.native_moex_models.instrument_info.FutureMoex;
-import stepanovvv.ru.models.native_moex_models.instrument_info.StockMoex;
 import stepanovvv.ru.models.toolsInfo.StockInfo;
+import stepanovvv.ru.pop_up_warnings.NoContent;
+import stepanovvv.ru.pop_up_warnings.WrongMove;
 import stepanovvv.ru.repository.api_mosExchange.ServerRepository;
 
 import javax.swing.*;
@@ -51,6 +52,11 @@ public class PanelHi2 extends StrategyPanel {
     public void setStocksByLevels() {
         // Список всех акций, по которым Мосбиржа ведет расчет метрик HI2
         List<StockInfo> allStocksInfo = repository.getStocksInfoForHi2();
+        if (allStocksInfo.isEmpty()) {
+            // окошко - предупреждение об отсутствии информации на сервере
+            NoContent.main(new String[] {"No content of StockInfo on server!!!"});
+
+        }
         // Фильтрация акций по уровням листинга
         List<StockInfo> stocksListLevel1 = allStocksInfo.stream()
                 .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 1)

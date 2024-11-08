@@ -1,6 +1,7 @@
 package stepanovvv.ru.strategyPanel;
 
 import stepanovvv.ru.MyTerminal;
+import stepanovvv.ru.pop_up_warnings.WrongMove;
 
 import javax.swing.*;
 import javax.swing.text.DateFormatter;

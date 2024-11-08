@@ -11,7 +11,6 @@ import stepanovvv.ru.models.toolsInfo.StockInfo;
 import java.util.List;
 
 @Slf4j
-@org.springframework.stereotype.Repository
 public class ServerRepository {
     private final RestClient restClient;
     // Адрес для запроса к контроллеру основного (серверного) приложения
@@ -43,7 +42,12 @@ public class ServerRepository {
                 .retrieve()                                        // получение ответа
                 .toEntity(new ParameterizedTypeReference<>() {
                 });  // десериализация ответа в параметризованный тип List
-        return response.getBody();
+        List<StockMoex> stockMoexList = response.getBody();
+        assert stockMoexList != null;
+        if (stockMoexList.isEmpty()) {
+            log.error("NO CONTENT StockMoex on My Server, url: {}", myServerUrl + endUrl);
+        }
+        return stockMoexList;
     }
 
     // Общий метод загрузки нужной информации по акциям
@@ -54,7 +58,12 @@ public class ServerRepository {
                 .retrieve()                                        // получение ответа
                 .toEntity(new ParameterizedTypeReference<>() {
                 });  // десериализация ответа в параметризованный тип List
-        return response.getBody();
+        List<StockInfo> stockInfoList = response.getBody();
+        assert stockInfoList != null;
+        if (stockInfoList.isEmpty()) {
+            log.error("NO CONTENT StockInfo on My Server, url: {}", myServerUrl + endUrl);
+        }
+        return stockInfoList;
     }
 
     // Общий метод загрузки нужной информации по фьючерсам
@@ -65,7 +74,12 @@ public class ServerRepository {
                 .retrieve()                                        // получение ответа
                 .toEntity(new ParameterizedTypeReference<>() {
                 });  // десериализация ответа в параметризованный тип List
-        return response.getBody();
+        List<FutureMoex> futureMoexList = response.getBody();
+        assert futureMoexList != null;
+        if (futureMoexList.isEmpty()) {
+            log.error("NO CONTENT FutureMoex on My Server, url: {}", myServerUrl + endUrl);
+        }
+        return futureMoexList;
     }
 
 }
