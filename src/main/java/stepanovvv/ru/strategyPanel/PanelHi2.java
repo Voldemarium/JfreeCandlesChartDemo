@@ -2,11 +2,11 @@ package stepanovvv.ru.strategyPanel;
 
 import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.MyTerminal;
-import stepanovvv.ru.models.native_moex_models.instrument_info.FutureMoex;
-import stepanovvv.ru.models.toolsInfo.StockInfo;
+import stepanovvv.ru.models.instrument_info.StockInfoDto;
+import stepanovvv.ru.models.native_moex_models.native_instrument_info.FutureMoex;
 import stepanovvv.ru.pop_up_warnings.NoContent;
-import stepanovvv.ru.pop_up_warnings.WrongMove;
-import stepanovvv.ru.repository.api_mosExchange.ServerRepository;
+import stepanovvv.ru.repository.MoexRepository;
+import stepanovvv.ru.service.MoexService;
 
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
@@ -16,6 +16,9 @@ import java.util.List;
 
 @Slf4j
 public class PanelHi2 extends StrategyPanel {
+    MoexService moexService = new MoexService();
+    MoexRepository<StockInfoDto> repository = new MoexRepository<>();
+
     private static final StrategyName name = StrategyName.STRATEGY_Hi2;
     private static final String[] list1 = new String[]{"Stocks", "Futures", "Currency"};
     private static final String[][] list2 = new String[][]{
@@ -24,15 +27,16 @@ public class PanelHi2 extends StrategyPanel {
             {"1 level", "2 level"}};                                          // раскрытие list1[2] - "Currency"
 
     //    private final List<List<StockMoex>> stockListByLevels = new ArrayList<>();
-    private final List<List<StockInfo>> stockListByLevels = new ArrayList<>();
+    private final List<List<StockInfoDto>> stockListByLevels = new ArrayList<>();
     private final List<List<FutureMoex>> futuresByLevels = new ArrayList<>();
 
     private final List<List<FutureMoex>> currentsByLevels = new ArrayList<>();
 
     //    private final String[][] futuresStocksByLevels;
 //    private final String[][] currentsByLevels;
+
     protected final JButton buttonFutureSpread_Strategy;
-    ServerRepository repository = new ServerRepository();
+
 
     public PanelHi2() {
         super();
@@ -51,22 +55,27 @@ public class PanelHi2 extends StrategyPanel {
 
     public void setStocksByLevels() {
         // Список всех акций, по которым Мосбиржа ведет расчет метрик HI2
-        List<StockInfo> allStocksInfo = repository.getStocksInfoForHi2();
-        if (allStocksInfo.isEmpty()) {
+        log.info("download stock info (DTO)");
+//        List<StockInfoDto> allStocksInfoDto = repository.getStocksInfoDtoForHi2();
+        List<StockInfoDto> allStocksInfoDto = moexService.getStocksInfoDtoForHi2();
+
+        if (allStocksInfoDto.isEmpty()) {
             // окошко - предупреждение об отсутствии информации на сервере
-            NoContent.main(new String[] {"No content of StockInfo on server!!!"});
+            NoContent.main(new String[]{"No content of StockInfoDto on server!!!"});
 
         }
         // Фильтрация акций по уровням листинга
-        List<StockInfo> stocksListLevel1 = allStocksInfo.stream()
-                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 1)
+        log.info("filtering stocks by listing levels");
+        List<StockInfoDto> stocksListLevel1 = allStocksInfoDto.stream()
+                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 1)
                 .toList();
-        List<StockInfo> stocksListLevel2 = allStocksInfo.stream()
-                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 2)
+        List<StockInfoDto> stocksListLevel2 = allStocksInfoDto.stream()
+                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 2)
                 .toList();
-        List<StockInfo> stocksListLevel3 = allStocksInfo.stream()
-                .filter(stockInfo -> stockInfo.getStockMoex().getListLevel() == 3)
+        List<StockInfoDto> stocksListLevel3 = allStocksInfoDto.stream()
+                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 3)
                 .toList();
+
         // Добавление отфильтрованных акций в список (список списков)
         stockListByLevels.add(stocksListLevel1);
         stockListByLevels.add(stocksListLevel2);
@@ -75,7 +84,9 @@ public class PanelHi2 extends StrategyPanel {
 
     public String[][] setFuturesStocksByLevels() {
         // Список всех фьючерсов, по которым Мосбиржа ведет расчет метрик HI2
-        List<FutureMoex> allFutures = repository.getFuturesForHi2();
+
+//        List<FutureMoex> allFutures = repository.getFuturesForHi2();
+
         // Фильтрация фьючерсов на акции, индексные, товарные и валютные
 
         // Фильтрация фьючерсов на акции по уровням листинга
@@ -124,27 +135,28 @@ public class PanelHi2 extends StrategyPanel {
         list2.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {    // при одинарном клике мышью
-                    // Получение выделенного элемента из окна 2
+                    // Получение выделенного элемента из окна 2 (порядковый номер уровня ликвидности)
                     int selected2 = list2.locationToIndex(e.getPoint());
                     switch (selected1) {
                         case 0:                     // если выбрано Stocks в list1
                             // список инструментов, отсортированный либо
                             // по алфавиту,
                             // либо  по объему торгов (ликвидности)
-
+                            log.info("sort stocks");
                             // Создаем копию выбранного по уровню списка акций
-                            List<StockInfo> listStocks = new ArrayList<>(stockListByLevels.get(selected2));
-                            //Создаем список названий акций
+                            List<StockInfoDto> listStocks = new ArrayList<>(stockListByLevels.get(selected2));
+                            //Создаем список (массив) названий акций
                             String[] stocksArrayLevel = new String[stockListByLevels.get(selected2).size()];
                             if (checkBox1.isSelected()) { // если выбрана сортировка по ликвидности
                                 // с сортировкой по объему торгов (ликвидности)
-//                              listStocks.sort((o1, o2) -> (int) (o2.getPrevVolume() - o1.getPrevVolume())); // в лотах
-                                listStocks.sort((o1, o2) -> (int) (o2.getPrevValue() - o1.getPrevValue())); // в рублях
+//                              listStocks.sort((o1, o2) -> (int) (o2.prevVolume() - o1.prevVolume())); // в лотах
+                                listStocks.sort((o1, o2) -> (int) (o2.prevValue() - o1.prevValue())); // в рублях
                             }
                             // если не выбрана сортировка по ликвидности (то будет по алфавиту)
+                            log.info("get shortName from stocks");
                             listStocks.stream()
-                                    .map(stockInfo -> stockInfo.getStockMoex().getSecId() + " (" +
-                                            stockInfo.getStockMoex().getShortName() + ")")
+                                    .map(stockInfoDto -> stockInfoDto.secId() + " (" +
+                                            stockInfoDto.stockMoexShortName() + ")")
                                     .toList().toArray(stocksArrayLevel);
                             list3.setListData(stocksArrayLevel);
                             break;

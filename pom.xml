@@ -60,8 +60,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <finalName>${project.name}</finalName>
                     <archive>
                         <manifest>
                             <mainClass>stepanovvv.ru.MyTerminal</mainClass>

@@ -1,4 +1,4 @@
-package stepanovvv.ru.models.native_moex_models.instrument_info;
+package stepanovvv.ru.models.native_moex_models.native_instrument_info;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

@@ -1,6 +1,7 @@
 package stepanovvv.ru.candlestick;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     // Формат времени для считывания данных из объекта свечи
@@ -62,9 +64,11 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     public JfreeChartPanel(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                            Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         // Create new chart
+        log.info("Create new chart");
         commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe,
                 deletingHolidays, volume, marketProfile);
         // Create new chart panel
+        log.info("Create new chart panel");
         commonChartPanel = new ChartPanel(commonChart);
 
         // Устанавливаем размер панели с графиком по умолчанию
@@ -93,27 +97,31 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 
     private JFreeChart createCommonChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                                          Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
-
         // Достаем данные из Мосбиржи по ticker, fromLocalDate, tillLocalDate, timeframe
+        log.info("Download candleMoexList");
         List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
 
 
         // Добавляем данные со свечей на таймсерии
         addCandles(candleMoexList);
         // Добавляем метрики Hi2, если график D1
+        log.info("add metrics Hi2");
         if (timeframe == Timeframe.D1_Hi2) {
             addMetricsHi2(candleMoexList);
         }
 
         // 1. Создаем график свечей
+        log.info("Create new chart with candleMoex");
         JFreeChart candlesChart = createCandlesChart("Candles", marketProfile);
         // 2. Создаем график метрик Hi2
+        log.info("Create new chart with metrics Hi2");
         JFreeChart metricsHi2Chart = null;
         if (timeframe == Timeframe.D1_Hi2) {
             metricsHi2Chart = createMetricsHi2Chart("metrics Hi2 Chart");
         }
 
         // 3. Создаем график объемов D1
+        log.info("Create new chart with volumes");
         JFreeChart volumeChart = null;
         if (volume) {
             volumeChart = createVolumeChart("Volume chart");
@@ -121,6 +129,8 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 
         // 4. Создаем основной график диаграммы с тремя подграфиками (candlestickSubplot,VolumeSubplot, buySellMetricSubplot)
         //		и одной общей осью времени dateAxis
+        log.info("Creating common chart (mainPlot with candlestickSubplot,VolumeSubplot, buySellMetricSubplot," +
+                " common dateAxis)");
         // Creating charts common dateAxis
         DateAxis dateAxis = new DateAxis("Time");
 
@@ -151,6 +161,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 
         // Если нужно удалить с графика выходные дни (субботу и воскресение)
         if (deletingHolidays) {
+            log.info("removing weekends (Saturday and Sunday) from the chart");
             SegmentedTimeline timeline = SegmentedTimeline.newMondayThroughFridayTimeline();
             dateAxis.setTimeline(timeline);
         }
@@ -176,6 +187,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 
         if (marketProfile) {
             // Create MarketProfile
+            log.info("Create MarketProfile");
             // Create horizontal volume chart renderer (Создание средства визуализации горизонтальных объемов)
             MarketProfileRenderer xyMarketProfileRenderer = new MarketProfileRenderer(); // Вид графика - бары (столбчатая диаграмма)
             // При наведении курсора мыши на элемент графика показываем значение Y рядом с курсором

@@ -1,5 +1,6 @@
 package stepanovvv.ru;
 
+import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.candlestick.JfreeChartPanel;
 import stepanovvv.ru.strategyPanel.PanelFutureSpread;
 import stepanovvv.ru.strategyPanel.PanelHi2;
@@ -10,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 
+@Slf4j
 public class MyTerminal extends JFrame {
 
     public MyTerminal(StrategyName strategy, String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
@@ -19,20 +21,23 @@ public class MyTerminal extends JFrame {
 //        JFrame.setDefaultLookAndFeelDecorated(true);
 //        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Если это использовать, при нажатии на крестик
         // закроется не только окно с графиком, но и сама программв
-
+        log.info("building \"jfreeChartPanel\"");
         JfreeChartPanel jfreeChartPanel = new JfreeChartPanel(ticker, fromLocalDate, tillLocalDate, timeframe,
                 deletingHolidays, volume, marketProfile);
         add(jfreeChartPanel.getCommonChartPanel(), BorderLayout.CENTER);
         // Вспомогательная панель справа
+        log.info("building \"richtPanel\"");
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BorderLayout());
 
         // Панель внутри правой панели (верхняя)
         JPanel panel2 = null;
         if (strategy == StrategyName.STRATEGY_Hi2) {
+            log.info("building \"panelHi2\"");
             panel2 = new PanelHi2();
         }
         if (strategy == StrategyName.STRATEGY_FUTURE_SPREAD) {
+            log.info("building \"panelFutureSpread\"");
             panel2 = new PanelFutureSpread();
         }
         assert panel2 != null;
@@ -55,6 +60,7 @@ public class MyTerminal extends JFrame {
     }
 
     public static void main(String[] args) {
+        log.info("input parameters");
         String ticker = "START PANEL";
         boolean deletingHolidays = true;
         LocalDate fromLocalDate = LocalDate.now();
@@ -63,6 +69,7 @@ public class MyTerminal extends JFrame {
         boolean marketProfile = true;
 
         if (args.length == 1 && args[0].equals("Future Spread")) {
+            log.info("building \"PANEL Future Spread\"");
             String ticker2 = "PANEL Future Spread";
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_FUTURE_SPREAD,
@@ -75,6 +82,7 @@ public class MyTerminal extends JFrame {
             });
         } else {
             SwingUtilities.invokeLater(() -> {
+                log.info("building \"START PANEL\"");
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_Hi2,
                         ticker, fromLocalDate, tillLocalDate, Timeframe.D1_Hi2,
                         deletingHolidays, volume, marketProfile);
