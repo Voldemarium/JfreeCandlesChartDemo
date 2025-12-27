@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Slf4j
-public class MoexRepository<T extends Record> {
+public class MoexRepository<T> {
     private final ObjectMapper mapper = new ObjectMapper();
     private final RestClient restClient;
     // Адрес для запроса к контроллеру основного (серверного) приложения (переместить в параметры запуска
@@ -22,15 +22,21 @@ public class MoexRepository<T extends Record> {
         this.restClient = RestClient.create();
     }
 
-    public List<T> getDto(String endUrl, Class<T> clazz) {
+    public List<T> getListByParsingJson(String endUrl, Class<T> clazz) {
         Object[] body = getResponseBody(endUrl);
-        return Collections.unmodifiableList(getParsingJsonToList(body, clazz));
+        if (body != null) {
+            return Collections.unmodifiableList(getParsingJsonToList(body, clazz));
+        }
+        return null;
     }
 
     // Парсинг объектов из JSON
     public List<T> getParsingJsonToList(Object[] body, Class<T> clazz) {
-        // десериализация ответа
-        return Arrays.stream(body).map(o -> mapper.convertValue(o, clazz)).toList();
+        // десериализация ответа в параметризованный тип List
+        if (body != null) {
+            return Arrays.stream(body).map(o -> mapper.convertValue(o, clazz)).toList();
+        }
+        return null;
     }
 
     // расшифровка ответа сервиса ApiMoex на запрос
@@ -41,10 +47,12 @@ public class MoexRepository<T extends Record> {
                 .uri(fullUrl)
                 .retrieve()                                        // получение ответа
                 .toEntity(new ParameterizedTypeReference<>() {
-                });  // десериализация ответа в параметризованный тип List
+                });
         Object[] objects = response.getBody();
-        assert objects != null;
-        if (objects.length == 0) {
+//        assert objects != null;
+        if (objects == null) {
+            log.error("NO CONTENT Objects on My Server, =NULL, url: {}", fullUrl);
+        } else if (objects.length == 0) {
             log.error("NO CONTENT Objects on My Server, url: {}", fullUrl);
         }
         return objects;

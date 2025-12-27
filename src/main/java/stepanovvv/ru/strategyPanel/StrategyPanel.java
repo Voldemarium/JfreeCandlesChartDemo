@@ -26,7 +26,7 @@ public abstract class StrategyPanel extends JPanel {
     protected final JFormattedTextField tillDatesField;
     protected final JButton buttonD1_Hi2;
     protected final ButtonGroup timeFramebuttonGroup;
-    protected final JButton buttonAddChart;
+    protected final JButton buttonCreateNewChart;
 
     public StrategyPanel() {
         strategyName = setStrategyName();
@@ -108,7 +108,7 @@ public abstract class StrategyPanel extends JPanel {
         JRadioButton button_M1 = new JRadioButton("M1");
         timeFramebuttonGroup.add(button_M1);
 
-        buttonAddChart = new JButton("add chart");
+        buttonCreateNewChart = new JButton("create new chart");
 
         // Подключение слушателя мыши на первый список
         addList1ListenerMoise(list1, list2, dataList2);
@@ -126,7 +126,7 @@ public abstract class StrategyPanel extends JPanel {
 
                     String builder = "   -----possible dates----- \n" +
                             "      from: " + fromDate + "\n" +
-                            "      till:     " + tillDate;
+                            "      till: " + tillDate;
                     dateInfo.setText(builder);
                 }
             }
@@ -153,7 +153,7 @@ public abstract class StrategyPanel extends JPanel {
             }
         });
 
-        buttonAddChart.addActionListener(e -> {
+        buttonCreateNewChart.addActionListener(e -> {
             Timeframe timeframe = null;
             if (button_M.isSelected()) {
                 timeframe = Timeframe.M;
@@ -186,8 +186,12 @@ public abstract class StrategyPanel extends JPanel {
                 LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
                 LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
                 //Запуск программы с выбранными на панели параметрами
-                MyTerminal.addChart(strategyName, selectedTicker, fromLocalDate, tillLocalDate, timeframe,
-                        checkBox2.isSelected(), checkBox3.isSelected(), checkBox4.isSelected());
+                MyTerminal.addChart(strategyName,
+                        selectedTicker,
+                        fromLocalDate, tillLocalDate, timeframe,
+                        checkBox2.isSelected(), // Галочка-выбор убирать ли с графика выходные дни (субботу и воскресение)
+                        checkBox3.isSelected(), // Галочка-выбор добавлять ли график объемов
+                        checkBox4.isSelected()); // Галочка-выбор добавлять ли на график маркетпрофиль (горизонтальные объемы)
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
                 WrongMove.main(null);
@@ -203,7 +207,7 @@ public abstract class StrategyPanel extends JPanel {
         add(new JScrollPane(dateInfo));
         add(new JLabel("from "));
         add(fromDatesField);
-        add(new JLabel("    till "));
+        add(new JLabel("        till "));
         add(tillDatesField);
 
         add(checkBox2);
@@ -222,7 +226,7 @@ public abstract class StrategyPanel extends JPanel {
         add(button_M10);
         add(button_M5);
         add(button_M1);
-        add(buttonAddChart);
+        add(buttonCreateNewChart);
         setVisible(true);
     }
 

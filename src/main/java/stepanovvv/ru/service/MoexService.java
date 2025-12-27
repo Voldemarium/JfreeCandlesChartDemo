@@ -8,10 +8,18 @@ import java.util.List;
 
 @Slf4j
 public class MoexService {
-   final MoexRepository<StockInfoDto> stockInfoDtoRepository = new MoexRepository<>();
+   private final MoexRepository<StockInfoDto> stockInfoDtoRepository1 = new MoexRepository<>();
+   private final MoexRepository<String> stockInfoDtoRepository2 = new MoexRepository<>();
 
+   ///  Получение информации об акциях с расчетом Hi2
     public List<StockInfoDto> getStocksInfoDtoForHi2() {
-        return stockInfoDtoRepository.getDto("stocks/allStockInfoDtoForHi2", StockInfoDto.class);
-
+        return stockInfoDtoRepository1.getListByParsingJson("stocks/allStockInfoDtoForHi2", StockInfoDto.class);
     }
+
+    /// Получение дат экспираций фьючерсов, участвующих в расчете 3-хногого спреда
+    public List<String> getExpirationDateForCurrenciesFuturesSpread_3() {
+        return stockInfoDtoRepository2.getListByParsingJson("futuresSpread3/currenciesFutures/expirationDates",
+                String.class);
+    }
+
 }

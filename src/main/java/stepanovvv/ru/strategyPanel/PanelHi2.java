@@ -5,7 +5,6 @@ import stepanovvv.ru.MyTerminal;
 import stepanovvv.ru.models.instrument_info.StockInfoDto;
 import stepanovvv.ru.models.native_moex_models.native_instrument_info.FutureMoex;
 import stepanovvv.ru.pop_up_warnings.NoContent;
-import stepanovvv.ru.repository.MoexRepository;
 import stepanovvv.ru.service.MoexService;
 
 import javax.swing.*;
@@ -16,15 +15,14 @@ import java.util.List;
 
 @Slf4j
 public class PanelHi2 extends StrategyPanel {
-    MoexService moexService = new MoexService();
-    MoexRepository<StockInfoDto> repository = new MoexRepository<>();
+    private final MoexService moexService = new MoexService();
 
     private static final StrategyName name = StrategyName.STRATEGY_Hi2;
     private static final String[] list1 = new String[]{"Stocks", "Futures", "Currency"};
     private static final String[][] list2 = new String[][]{
-            {"1 level", "2 level", "3 level"},                                // раскрытие list1[0] - "Stocks"
-            {"1 level", "2 level", "3 level", "индексы", "товары", "валюта"}, // раскрытие list1[1] - "Futures"
-            {"1 level", "2 level"}};                                          // раскрытие list1[2] - "Currency"
+            {"1 level", "2 level", "3 level"},                                // раскрытие list1[0] - для "Stocks"
+            {"1 level", "2 level", "3 level", "индексы", "товары", "валюта"}, // раскрытие list1[1] - для "Futures"
+            {"1 level", "2 level"}};                                          // раскрытие list1[2] - для "Currency"
 
     //    private final List<List<StockMoex>> stockListByLevels = new ArrayList<>();
     private final List<List<StockInfoDto>> stockListByLevels = new ArrayList<>();
@@ -35,7 +33,9 @@ public class PanelHi2 extends StrategyPanel {
     //    private final String[][] futuresStocksByLevels;
 //    private final String[][] currentsByLevels;
 
-    protected final JButton buttonFutureSpread_Strategy;
+    protected final JButton buttonBaseFutureSpread_Strategy;
+    protected final JButton buttonFutureSpread_2_Strategy;
+    protected final JButton buttonFutureSpread_3_Strategy;
 
 
     public PanelHi2() {
@@ -48,38 +48,46 @@ public class PanelHi2 extends StrategyPanel {
         setFuturesStocksByLevels();
         setCurrentsByLevels();
 
-        buttonFutureSpread_Strategy = new JButton("FutureSpread_Strategy");
-        buttonFutureSpread_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"Future Spread"}));
-        add(buttonFutureSpread_Strategy);
+        buttonBaseFutureSpread_Strategy = new JButton("BaseFutureSpread_Strategy");
+        buttonBaseFutureSpread_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"BaseFutureSpread"}));
+        add(buttonBaseFutureSpread_Strategy);
+
+        buttonFutureSpread_2_Strategy = new JButton("FutureSpread_2_Strategy");
+        buttonFutureSpread_2_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"FutureSpread_2"}));
+        add(buttonFutureSpread_2_Strategy);
+
+        buttonFutureSpread_3_Strategy = new JButton("FutureSpread_3_Strategy");
+        buttonFutureSpread_3_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"FutureSpread_3"}));
+        add(buttonFutureSpread_3_Strategy);
     }
 
     public void setStocksByLevels() {
         // Список всех акций, по которым Мосбиржа ведет расчет метрик HI2
         log.info("download stock info (DTO)");
-//        List<StockInfoDto> allStocksInfoDto = repository.getStocksInfoDtoForHi2();
         List<StockInfoDto> allStocksInfoDto = moexService.getStocksInfoDtoForHi2();
-
-        if (allStocksInfoDto.isEmpty()) {
+        if (allStocksInfoDto == null) {
             // окошко - предупреждение об отсутствии информации на сервере
             NoContent.main(new String[]{"No content of StockInfoDto on server!!!"});
 
-        }
-        // Фильтрация акций по уровням листинга
-        log.info("filtering stocks by listing levels");
-        List<StockInfoDto> stocksListLevel1 = allStocksInfoDto.stream()
-                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 1)
-                .toList();
-        List<StockInfoDto> stocksListLevel2 = allStocksInfoDto.stream()
-                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 2)
-                .toList();
-        List<StockInfoDto> stocksListLevel3 = allStocksInfoDto.stream()
-                .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 3)
-                .toList();
+        } else {
+            // Фильтрация акций по уровням листинга
+            log.info("filtering stocks by listing levels");
+            List<StockInfoDto> stocksListLevel1 = allStocksInfoDto.stream()
+                    .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 1)
+                    .toList();
+            List<StockInfoDto> stocksListLevel2 = allStocksInfoDto.stream()
+                    .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 2)
+                    .toList();
+            List<StockInfoDto> stocksListLevel3 = allStocksInfoDto.stream()
+                    .filter(stockInfoDto -> stockInfoDto.stockMoexListLevel() == 3)
+                    .toList();
 
-        // Добавление отфильтрованных акций в список (список списков)
-        stockListByLevels.add(stocksListLevel1);
-        stockListByLevels.add(stocksListLevel2);
-        stockListByLevels.add(stocksListLevel3);
+            // Добавление отфильтрованных акций в список (список списков)
+            stockListByLevels.add(stocksListLevel1);
+            stockListByLevels.add(stocksListLevel2);
+            stockListByLevels.add(stocksListLevel3);
+        }
+
     }
 
     public String[][] setFuturesStocksByLevels() {
@@ -144,13 +152,18 @@ public class PanelHi2 extends StrategyPanel {
                             // либо  по объему торгов (ликвидности)
                             log.info("sort stocks");
                             // Создаем копию выбранного по уровню списка акций
-                            List<StockInfoDto> listStocks = new ArrayList<>(stockListByLevels.get(selected2));
+                            List<StockInfoDto> listStocks = List.of();
                             //Создаем список (массив) названий акций
-                            String[] stocksArrayLevel = new String[stockListByLevels.get(selected2).size()];
-                            if (checkBox1.isSelected()) { // если выбрана сортировка по ликвидности
-                                // с сортировкой по объему торгов (ликвидности)
+                            String[] stocksArrayLevel = new String[0];
+                            if (!stockListByLevels.isEmpty()) {
+                                listStocks = new ArrayList<>(stockListByLevels.get(selected2));
+                                //список (массив) названий акций
+                                stocksArrayLevel = new String[stockListByLevels.get(selected2).size()];
+                                if (checkBox1.isSelected()) { // если выбрана сортировка по ликвидности
+                                    // с сортировкой по объему торгов (ликвидности)
 //                              listStocks.sort((o1, o2) -> (int) (o2.prevVolume() - o1.prevVolume())); // в лотах
-                                listStocks.sort((o1, o2) -> (int) (o2.prevValue() - o1.prevValue())); // в рублях
+                                    listStocks.sort((o1, o2) -> (int) (o2.prevValue() - o1.prevValue())); // в рублях
+                                }
                             }
                             // если не выбрана сортировка по ликвидности (то будет по алфавиту)
                             log.info("get shortName from stocks");
@@ -159,6 +172,7 @@ public class PanelHi2 extends StrategyPanel {
                                             stockInfoDto.stockMoexShortName() + ")")
                                     .toList().toArray(stocksArrayLevel);
                             list3.setListData(stocksArrayLevel);
+
                             break;
                         case 1:
 //                            list3.setListData(futuresStocksByLevels[selected2]);

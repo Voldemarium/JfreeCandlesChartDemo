@@ -4,8 +4,8 @@ import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class PanelFutureSpread extends StrategyPanel {
-    private static final StrategyName name = StrategyName.STRATEGY_FUTURE_SPREAD;
+public class PanelBaseFutureSpread extends StrategyPanel {
+    private static final StrategyName name = StrategyName.STRATEGY_BASE_FUTURE_SPREAD;
     private static final String[] list1 = new String[]{
             "Indexes",
             "Indexes futures",
@@ -24,8 +24,8 @@ public class PanelFutureSpread extends StrategyPanel {
             {"Нефть и газ", "драг_металлы", "цвет_металлы", "продовольствие"},
             // раскрытие list1[5] - "commodities spot",
             {"Нефть и газ", "драг_металлы", "цвет_металлы", "продовольствие"},
-            {"1 level", "2 level"},                                   // раскрытие list1[2] - "currencies",
-            {"1 level", "2 level"}                                    // раскрытие list1[2] - "currency futures"
+            {"1 level", "2 level"},                                   // раскрытие list1[6] - "currencies",
+            {"1 level", "2 level"}                                    // раскрытие list1[7] - "currency futures"
     };
 
     private final String[][] indexes;
@@ -35,9 +35,9 @@ public class PanelFutureSpread extends StrategyPanel {
     private final String[][] commodities;
     private final String[][] futuresCommodities;
     private final String[][] currentsByLevels;
-    private final String[][] futurescurrentsByLevels;
+    private final String[][] futuresCurrenciesByLevels;
 
-    public PanelFutureSpread() {
+    public PanelBaseFutureSpread() {
         super();
         indexes = setIndexes(false);
         futuresIndexes = setIndexes(true);
@@ -45,8 +45,8 @@ public class PanelFutureSpread extends StrategyPanel {
         futuresStocksByLevels = setStocksByLevels(true);
         commodities = setCommodities(false);
         futuresCommodities = setCommodities(true);
-        currentsByLevels = setCurrentsByLevels(false);
-        futurescurrentsByLevels = setCurrentsByLevels(true);
+        currentsByLevels = setCurrenciesByLevels(false);
+        futuresCurrenciesByLevels = setCurrenciesByLevels(true);
     }
 
     public String[][] setIndexes(boolean isFutures) {
@@ -109,7 +109,7 @@ public class PanelFutureSpread extends StrategyPanel {
         return result;
     }
 
-    public String[][] setCurrentsByLevels(boolean isFutures) {
+    public String[][] setCurrenciesByLevels(boolean isFutures) {
         String[][] result;
         if (isFutures) {
             result = new String[][]{
@@ -183,7 +183,7 @@ public class PanelFutureSpread extends StrategyPanel {
                             list3.setListData(currentsByLevels[selected2]);
                             break;
                         case 7:
-                            list3.setListData(futurescurrentsByLevels[selected2]);
+                            list3.setListData(futuresCurrenciesByLevels[selected2]);
                             break;
                     }
                 }

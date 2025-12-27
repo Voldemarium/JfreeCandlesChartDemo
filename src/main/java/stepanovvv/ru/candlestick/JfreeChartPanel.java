@@ -43,6 +43,8 @@ import java.util.List;
 @Slf4j
 @Getter
 public class JfreeChartPanel extends JPanel implements ChartMouseListener {
+//    private final MoexService moexService = new MoexService();
+
     // Формат времени для считывания данных из объекта свечи
     private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
@@ -60,12 +62,12 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     private final Float crosshairWidth = 0.4f;        // толщина линии перекрестия
     private final Color crosshairColor = Color.GRAY;  // цвет линии перектрестия
 
-
-    public JfreeChartPanel(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+    // Создание графика
+    public JfreeChartPanel(String url, String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                            Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
-        // Create new chart
+        // Create new chart (Создание свечного графика)
         log.info("Create new chart");
-        commonChart = createCommonChart(ticker, fromLocalDate, tillLocalDate, timeframe,
+        commonChart = createCommonChart(url, ticker, fromLocalDate, tillLocalDate, timeframe,
                 deletingHolidays, volume, marketProfile);
         // Create new chart panel
         log.info("Create new chart panel");
@@ -94,12 +96,24 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         add(commonChartPanel);
     }
 
-
-    private JFreeChart createCommonChart(String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+    /// Создание графика
+    private JFreeChart createCommonChart(String url, String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
                                          Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
-        // Достаем данные из Мосбиржи по ticker, fromLocalDate, tillLocalDate, timeframe
+        
         log.info("Download candleMoexList");
-        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+
+        List<CandleMoex> candleMoexList = List.of();
+        if (ticker.equals("START PANEL") || ticker.equals("BaseFutureSpread") || ticker.equals("FutureSpread_2_3") ) {
+            candleMoexList = new MockListCandles().getCandleMoexList();  
+        } else {
+            // Достаем данные из приложения API MOEX по ticker, fromLocalDate, tillLocalDate, timeframe
+
+            
+            
+        }
+        
+
+
 
 
         // Добавляем данные со свечей на таймсерии
