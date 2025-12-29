@@ -1,6 +1,7 @@
 package stepanovvv.ru.strategyPanel;
 
 import lombok.extern.slf4j.Slf4j;
+import stepanovvv.ru.MyTerminal;
 import stepanovvv.ru.service.MoexService;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.awt.event.MouseEvent;
 public class PanelFutureSpread_2 extends StrategyPanel {
     private final MoexService moexService = new MoexService();
     private static final StrategyName name = StrategyName.STRATEGY_FUTURE_SPREAD_2;
+    private static final String strategyUrl = "futureSpread2";
     private static final String[] list1 = new String[]{
             "calendar_future_spread", "between_simple_and_privileged"};
     private static final String[][] list2 = new String[][]{
@@ -21,8 +23,8 @@ public class PanelFutureSpread_2 extends StrategyPanel {
     private final String[][] calendar_future_spread_2;
     private final String[][] between_simple_and_privileged_2;
 
-    public PanelFutureSpread_2() {
-        super();
+    public PanelFutureSpread_2(MyTerminal myTerminal) {
+        super(myTerminal);
         calendar_future_spread_2 = setCalendarFutureSpread_2();
         between_simple_and_privileged_2 = setBetweenSimpleAndPrivilegedSpread_2();
 
@@ -49,6 +51,11 @@ public class PanelFutureSpread_2 extends StrategyPanel {
     @Override
     public StrategyName setStrategyName() {
         return name;
+    }
+
+    @Override
+    public String setStrategyUrl() {
+        return strategyUrl;
     }
 
     @Override

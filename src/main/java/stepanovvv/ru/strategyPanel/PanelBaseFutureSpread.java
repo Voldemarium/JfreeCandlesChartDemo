@@ -1,11 +1,15 @@
 package stepanovvv.ru.strategyPanel;
 
+import stepanovvv.ru.MyTerminal;
+
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class PanelBaseFutureSpread extends StrategyPanel {
     private static final StrategyName name = StrategyName.STRATEGY_BASE_FUTURE_SPREAD;
+    private static final String strategyUrl = "baseFutureSpread";
+
     private static final String[] list1 = new String[]{
             "Indexes",
             "Indexes futures",
@@ -37,8 +41,8 @@ public class PanelBaseFutureSpread extends StrategyPanel {
     private final String[][] currentsByLevels;
     private final String[][] futuresCurrenciesByLevels;
 
-    public PanelBaseFutureSpread() {
-        super();
+    public PanelBaseFutureSpread(MyTerminal myTerminal) {
+        super(myTerminal);
         indexes = setIndexes(false);
         futuresIndexes = setIndexes(true);
         stocksByLevels = setStocksByLevels(false);
@@ -128,6 +132,11 @@ public class PanelBaseFutureSpread extends StrategyPanel {
     @Override
     public StrategyName setStrategyName() {
         return name;
+    }
+
+    @Override
+    public String setStrategyUrl() {
+        return strategyUrl;
     }
 
     @Override

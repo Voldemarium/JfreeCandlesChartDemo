@@ -9,7 +9,8 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.xy.DefaultXYDataset;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
-import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoexWithMetrics;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandlesWithMetrics;
 
 import javax.swing.*;
 import java.awt.*;
@@ -58,7 +59,8 @@ public class DefaultXYDatasetDemo3 extends JFrame implements ChartMouseListener 
     private DefaultXYDataset createDataset() {
         DefaultXYDataset dataset = new DefaultXYDataset();
         // Create candleMoexList
-        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+        List<CandleMoex> candleMoexList = new MockListCandlesWithMetrics().getCandleMoexWithMetricsList().stream()
+                .map(CandleMoexWithMetrics::getCandleMoex).toList();
         //  Заполняем двумерный массив данных
         double[][] data = new double[][] {{22.1, 22.2, 22.3, 22.5}, {1.3, 34.0, 45.3, 55.33}};
         dataset.addSeries("Volume", data);

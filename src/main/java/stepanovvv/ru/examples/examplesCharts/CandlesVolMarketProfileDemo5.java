@@ -1,5 +1,6 @@
 package stepanovvv.ru.examples.examplesCharts;
 
+import lombok.Getter;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
 import org.jfree.chart.panel.CrosshairOverlay;
@@ -19,7 +20,8 @@ import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.candlestick.MarketProfileRenderer;
 import stepanovvv.ru.examples.examlesModelTests.examlesModelTests.MyPanelHi2;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
-import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoexWithMetrics;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandlesWithMetrics;
 import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
@@ -32,6 +34,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,6 +42,7 @@ import java.util.List;
 /**
  * A demo showing crosshairs that follow the data points on an XYPlot.
  */
+@Getter
 public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseListener {
     private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
@@ -46,7 +50,7 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
     private final Float crosshairWidth = 0.4f;
     private final Color crosshairColor = Color.GRAY;
 
-    private ChartPanel chartPanel;
+    private final ChartPanel chartPanel;
 
     private OHLCDataset ohlcDataSet;
     private XYDataset volumeDataset;
@@ -58,7 +62,11 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
     public CandlesVolMarketProfileDemo5(String title) {
         super(title);
 //        setContentPane(createContent(title));
-        this.add(createContent(title), BorderLayout.CENTER);
+        /// Добавление панели с графиком
+        this.chartPanel = createContent(title, 0);
+        chartPanel.setName("Chart");
+        this.add(chartPanel, BorderLayout.CENTER);
+
         // Вспомогательная панель справа
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BorderLayout());
@@ -79,7 +87,7 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
         panel1.add(new JLabel("-------------------------------"));
 
        // Панель внутри правой панели (верхняя)
-        JPanel myPanelHi2 = new MyPanelHi2();
+        JPanel myPanelHi2 = new MyPanelHi2(this);
 
         rightPanel.add(panel1, BorderLayout.NORTH); // добавляем панель с кнопками в правую панель сверху
         rightPanel.add(myPanelHi2, BorderLayout.CENTER); // добавляем панель в правую панель в центр
@@ -87,9 +95,23 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
 
     }
 
-    private JPanel createContent(String title) {
+    /// Построение панели с графиком
+    public ChartPanel createContent(String title, int var) {
         // Create candleMoexList
-        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+        List<CandleMoex> mockCandleMoexList = new MockListCandlesWithMetrics().getCandleMoexWithMetricsList().stream()
+                .map(CandleMoexWithMetrics::getCandleMoex)
+                .toList();
+        List<CandleMoex> candleMoexList = new ArrayList<>();
+        if (var == 0) {
+            candleMoexList.add(mockCandleMoexList.get(0));
+            candleMoexList.add(mockCandleMoexList.get(1));
+        } else {
+            candleMoexList.add(mockCandleMoexList.get(0));
+            candleMoexList.add(mockCandleMoexList.get(1));
+            candleMoexList.add(mockCandleMoexList.get(2));
+            candleMoexList.add(mockCandleMoexList.get(3));
+        }
+
         // Добавляем данные со свечей на таймсерию
         addCandles(candleMoexList);
 
@@ -120,14 +142,15 @@ public class CandlesVolMarketProfileDemo5 extends JFrame implements ChartMouseLi
         commonChart.removeLegend();
 
 
-        this.chartPanel = new ChartPanel(commonChart);
+//        this.chartPanel = new ChartPanel(commonChart);
+        ChartPanel chartPanel = new ChartPanel(commonChart);
         // Устанавливаем размер панели с графиком по умолчанию
         chartPanel.setPreferredSize(new Dimension(1600, 800));
         // Enable zooming
         chartPanel.setMouseZoomable(true);
         chartPanel.setMouseWheelEnabled(true);
 
-        this.chartPanel.addChartMouseListener(this);
+        chartPanel.addChartMouseListener(this);
         CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
         this.xCrosshair = new Crosshair(Double.NaN, Color.BLUE, new BasicStroke(0.2f));
         this.xCrosshair.setLabelVisible(true);

@@ -15,7 +15,8 @@ import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jfree.data.xy.*;
 import stepanovvv.ru.candlestick.CustomHighLowItemLabelGenerator;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
-import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoexWithMetrics;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandlesWithMetrics;
 import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
@@ -70,7 +71,8 @@ public class CandlestickChartDemo4 extends JFrame implements ChartMouseListener 
 
     private JFreeChart createChart(String chartTitle) {
         // Create candleMoexList
-        List<CandleMoex> candleMoexList = new MockListCandles().getCandleMoexList();
+        List<CandleMoex> candleMoexList = new MockListCandlesWithMetrics().getCandleMoexWithMetricsList().stream()
+                .map(CandleMoexWithMetrics::getCandleMoex).toList();
         // Добавляем данные со свечей на таймсерию
         addCandles(candleMoexList);
         // Создаем график фабричным методом

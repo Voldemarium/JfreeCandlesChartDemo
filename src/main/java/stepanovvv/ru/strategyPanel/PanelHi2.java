@@ -18,6 +18,7 @@ public class PanelHi2 extends StrategyPanel {
     private final MoexService moexService = new MoexService();
 
     private static final StrategyName name = StrategyName.STRATEGY_Hi2;
+    private static final String strategyUrl = "hi2";
     private static final String[] list1 = new String[]{"Stocks", "Futures", "Currency"};
     private static final String[][] list2 = new String[][]{
             {"1 level", "2 level", "3 level"},                                // раскрытие list1[0] - для "Stocks"
@@ -38,8 +39,8 @@ public class PanelHi2 extends StrategyPanel {
     protected final JButton buttonFutureSpread_3_Strategy;
 
 
-    public PanelHi2() {
-        super();
+    public PanelHi2(MyTerminal myTerminal) {
+        super(myTerminal);
         // вызов метода для фильтрации акций по уровню листинга и добавление их в список по уровням листинга
         setStocksByLevels();
 
@@ -120,6 +121,11 @@ public class PanelHi2 extends StrategyPanel {
     @Override
     public StrategyName setStrategyName() {
         return name;
+    }
+
+    @Override
+    public String setStrategyUrl() {
+        return strategyUrl;
     }
 
     @Override

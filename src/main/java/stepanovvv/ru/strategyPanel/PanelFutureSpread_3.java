@@ -1,6 +1,7 @@
 package stepanovvv.ru.strategyPanel;
 
 import lombok.extern.slf4j.Slf4j;
+import stepanovvv.ru.MyTerminal;
 import stepanovvv.ru.service.MoexService;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ import java.util.List;
 public class PanelFutureSpread_3 extends StrategyPanel {
     private final MoexService moexService = new MoexService();
     private static final StrategyName name = StrategyName.STRATEGY_FUTURE_SPREAD_3;
+    private static final String strategyUrl = "futuresSpread3";
     private static final String[] list1 = new String[]{
             "currency_future_spread_3", "metal_future_spread_3", "index_future_spread_3"};
     private static final String[][] list2 = new String[][]{
@@ -26,8 +28,8 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     private final String[][] index_future_spread_3;
 
 
-    public PanelFutureSpread_3() {
-        super();
+    public PanelFutureSpread_3(MyTerminal myTerminal) {
+        super(myTerminal);
         currency_future_spread_3 = setCurrencyFutureSpread_3();
         metal_future_spread_3 = setMetalFutureSpread_3();
         index_future_spread_3 = setIndexFutureSpread_3();
@@ -36,6 +38,7 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     public String[][] setCurrencyFutureSpread_3() {
         // Получаем из API MOEX даты экспирации
         List<String> listOfExpirationDates = moexService.getExpirationDateForCurrenciesFuturesSpread_3();
+
         String[] arrayOfExpirationDates = listOfExpirationDates.toArray(String[]::new);
         return new String[][]{
                 // Данные сохранены в БД (в БД хранить информацию о последнем обновлении, если новый день - обновить БД)
@@ -67,6 +70,11 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     @Override
     public StrategyName setStrategyName() {
         return name;
+    }
+
+    @Override
+    public String setStrategyUrl() {
+        return strategyUrl;
     }
 
     @Override

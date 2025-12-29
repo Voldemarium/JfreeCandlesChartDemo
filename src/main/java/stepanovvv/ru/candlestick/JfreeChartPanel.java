@@ -14,6 +14,7 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.time.Day;
+import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.ohlc.OHLCSeries;
@@ -22,9 +23,11 @@ import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import stepanovvv.ru.models.native_moex_models.candles.CandleMoexWithMetrics;
+import stepanovvv.ru.service.MoexService;
 import stepanovvv.ru.strategyPanel.Timeframe;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
-import stepanovvv.ru.models.native_moex_models.candles.MockListCandles;
+import stepanovvv.ru.models.native_moex_models.candles.MockListCandlesWithMetrics;
 import stepanovvv.ru.candlestick.oldJFreecart.SegmentedTimeline;
 
 import javax.swing.*;
@@ -36,6 +39,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -43,11 +47,13 @@ import java.util.List;
 @Slf4j
 @Getter
 public class JfreeChartPanel extends JPanel implements ChartMouseListener {
-//    private final MoexService moexService = new MoexService();
+    private final MoexService moexService = new MoexService();
 
     // Формат времени для считывания данных из объекта свечи
-    private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
+//    private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
+//    private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
+    private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy.HH.mm";
     private final String offsetId = "+04:00";
 
     private final JFreeChart commonChart; // общий график
@@ -62,12 +68,15 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     private final Float crosshairWidth = 0.4f;        // толщина линии перекрестия
     private final Color crosshairColor = Color.GRAY;  // цвет линии перектрестия
 
+
     // Создание графика
-    public JfreeChartPanel(String url, String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
+    public JfreeChartPanel(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
+                           String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
                            Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         // Create new chart (Создание свечного графика)
         log.info("Create new chart");
-        commonChart = createCommonChart(url, ticker, fromLocalDate, tillLocalDate, timeframe,
+        commonChart = createCommonChart(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
+                selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe,
                 deletingHolidays, volume, marketProfile);
         // Create new chart panel
         log.info("Create new chart panel");
@@ -94,39 +103,45 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         // (необязательно, только в случае ее использования без возможности уменьшать размер графиков
         // изменением размера окна Frame)
         add(commonChartPanel);
+        log.info("add new chart panel");
     }
 
     /// Создание графика
-    private JFreeChart createCommonChart(String url, String ticker, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                                         Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
-        
+    public JFreeChart createCommonChart(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
+                                        String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
+                                        Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
         log.info("Download candleMoexList");
-
-        List<CandleMoex> candleMoexList = List.of();
-        if (ticker.equals("START PANEL") || ticker.equals("BaseFutureSpread") || ticker.equals("FutureSpread_2_3") ) {
-            candleMoexList = new MockListCandles().getCandleMoexList();  
+        List<CandleMoex> candleMoexList = new ArrayList<>();
+        List<CandleMoexWithMetrics> candleMoexWithMetricsList = new ArrayList<>();
+        if (selectedTickerOrExpDateOfList3.equals("START PANEL") ||
+                selectedTickerOrExpDateOfList3.equals("BaseFutureSpread") ||
+                selectedTickerOrExpDateOfList3.equals("FutureSpread_2") ||
+                selectedTickerOrExpDateOfList3.equals("FutureSpread_3")) {
+            /// Демо-свечи, отображающиеся при сторте панели стратегии
+            candleMoexWithMetricsList.addAll(new MockListCandlesWithMetrics().getCandleMoexWithMetricsList());
+            candleMoexList.addAll(candleMoexWithMetricsList.stream().map(CandleMoexWithMetrics::getCandleMoex).toList());
         } else {
-            // Достаем данные из приложения API MOEX по ticker, fromLocalDate, tillLocalDate, timeframe
+            // Достаем данные из приложения API MOEX по url, fromLocalDate, tillLocalDate, timeframe
+            String fullUrl = strategyUrl + "/" + selectedInstrumentOfList1 + "/" + selectedInstrumentOfList2 +
+                    "/" + selectedTickerOrExpDateOfList3 + "?" + "fromDate=" + fromLocalDate +
+                    "&tillDate=" + tillLocalDate + "&interval=" + timeframe;
+            log.info("full url = {}", fullUrl);
+            candleMoexList.addAll(moexService.getCandleMoexByUrlAndTicker(fullUrl));
 
-            
-            
         }
-        
-
-
-
 
         // Добавляем данные со свечей на таймсерии
         addCandles(candleMoexList);
         // Добавляем метрики Hi2, если график D1
-        log.info("add metrics Hi2");
         if (timeframe == Timeframe.D1_Hi2) {
-            addMetricsHi2(candleMoexList);
+            log.info("add metrics Hi2");
+            addMetricsHi2(candleMoexWithMetricsList);
         }
 
         // 1. Создаем график свечей
         log.info("Create new chart with candleMoex");
-        JFreeChart candlesChart = createCandlesChart("Candles", marketProfile);
+        String title = selectedInstrumentOfList2 + " (" + selectedTickerOrExpDateOfList3 + ")";
+        JFreeChart candlesChart = createCandlesChart("Candles " + title, marketProfile);
         // 2. Создаем график метрик Hi2
         log.info("Create new chart with metrics Hi2");
         JFreeChart metricsHi2Chart = null;
@@ -170,7 +185,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         // Ориентация графиков
         mainPlot.setOrientation(PlotOrientation.VERTICAL);
         // Построение общего графика
-        JFreeChart commonChart = new JFreeChart(ticker, JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
+        JFreeChart commonChart = new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, mainPlot, true);
         commonChart.removeLegend();
 
         // Если нужно удалить с графика выходные дни (субботу и воскресение)
@@ -181,6 +196,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         }
         return commonChart;
     }
+
 
     private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile) {
         // Создаем график фабричным методом
@@ -305,16 +321,17 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     public void addCandles(List<CandleMoex> candleMoexList) {
         OHLCSeries ohlcSeries = new OHLCSeries("candles");
         TimeSeries volumeSeries = new TimeSeries("volume");
-        // Добавляем свечи на графмк в цикле
+        // Добавляем свечи на график в цикле
         for (int i = 0; i < candleMoexList.size(); i++) {
             CandleMoex candleMoex = candleMoexList.get(i);
             LocalDateTime dateTimeOpen = candleMoex.getBegin();
-            Date date = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
-            Day t = new Day(date);
+            Date openTime = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
+            Minute openMinute = new Minute(openTime);
+//            Day t = new Day(openTime);
             // добавление свечи
-            ohlcSeries.add(t, candleMoex.getOpen(), candleMoex.getHigh(), candleMoex.getLow(), candleMoex.getClose());
+            ohlcSeries.add(openMinute, candleMoex.getOpen(), candleMoex.getHigh(), candleMoex.getLow(), candleMoex.getClose());
             // добавление объема на свече
-            volumeSeries.add(t, candleMoex.getVolume());
+            volumeSeries.add(openMinute, candleMoex.getVolume());
         }
         OHLCSeriesCollection candlestickDataset = new OHLCSeriesCollection();
         candlestickDataset.addSeries(ohlcSeries);
@@ -322,35 +339,35 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         volumeDataSet = new TimeSeriesCollection(volumeSeries);
     }
 
-    public void addMetricsHi2(List<CandleMoex> candleMoexList) {
+    public void addMetricsHi2(List<CandleMoexWithMetrics> candleMoexWithMetricsList) {
         TimeSeries buyMetricSeries = new TimeSeries("BUY");
         TimeSeries sellMetricSeries = new TimeSeries("SELL");
         double prevBuy = 0;
         double prevSell = 0;
         // Добавляем свечи на графмк в цикле
-        for (int i = 0; i < candleMoexList.size(); i++) {
-            CandleMoex candleMoex = candleMoexList.get(i);
-            LocalDateTime dateTimeOpen = candleMoex.getBegin();
+        for (int i = 0; i < candleMoexWithMetricsList.size(); i++) {
+            CandleMoexWithMetrics candleMoexWithMetrics = candleMoexWithMetricsList.get(i);
+            LocalDateTime dateTimeOpen = candleMoexWithMetrics.getCandleMoex().getBegin();
             Date date = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
             Day t = new Day(date);
             // добавление метрик
             if (i == 0) {
-                buyMetricSeries.add(t, candleMoex.getBuyMetric());
-                sellMetricSeries.add(t, candleMoex.getSellMetric());
-            } else if (i < candleMoexList.size() - 1) {
+                buyMetricSeries.add(t, candleMoexWithMetrics.getBuyMetric());
+                sellMetricSeries.add(t, candleMoexWithMetrics.getSellMetric());
+            } else if (i < candleMoexWithMetricsList.size() - 1) {
                 buyMetricSeries.add(t, prevBuy);
                 sellMetricSeries.add(t, prevSell);
             } else {
                 buyMetricSeries.add(t, prevBuy);
                 sellMetricSeries.add(t, prevSell);
-                LocalDateTime dateTimeOpen2 = candleMoex.getBegin().plusDays(1);
+                LocalDateTime dateTimeOpen2 = candleMoexWithMetrics.getCandleMoex().getBegin().plusDays(1);
                 Date date2 = new Date(dateTimeOpen2.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
                 Day t2 = new Day(date2);
-                buyMetricSeries.add(t2, candleMoex.getBuyMetric());
-                sellMetricSeries.add(t2, candleMoex.getSellMetric());
+                buyMetricSeries.add(t2, candleMoexWithMetrics.getBuyMetric());
+                sellMetricSeries.add(t2, candleMoexWithMetrics.getSellMetric());
             }
-            prevBuy = candleMoex.getBuyMetric();
-            prevSell = candleMoex.getSellMetric();
+            prevBuy = candleMoexWithMetrics.getBuyMetric();
+            prevSell = candleMoexWithMetrics.getSellMetric();
         }
         TimeSeriesCollection metricHi2Collection = new TimeSeriesCollection();
         metricHi2Collection.addSeries(buyMetricSeries);

@@ -1,5 +1,8 @@
 package stepanovvv.ru.examples.examlesModelTests.examlesModelTests;
 
+import org.jfree.chart.ChartPanel;
+import stepanovvv.ru.examples.examplesCharts.CandlesVolMarketProfileDemo5;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -7,6 +10,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Date;
@@ -15,6 +19,8 @@ import javax.swing.*;
 import javax.swing.text.DateFormatter;
 
 public class MyPanelHi2 extends JPanel {
+   private CandlesVolMarketProfileDemo5 candlesVolMarketProfileDemo5;
+
     // Данные списка
     private final String[] dataList = {"Stocks", "Futures", "Currency"};
     private int selected1;
@@ -46,7 +52,8 @@ public class MyPanelHi2 extends JPanel {
     private final JButton button;
 
 
-    public MyPanelHi2() {
+    public MyPanelHi2(CandlesVolMarketProfileDemo5 candlesVolMarketProfileDemo5) {
+        this.candlesVolMarketProfileDemo5 = candlesVolMarketProfileDemo5;
 //        super("Выбор инструмента");
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         // Создание панели
@@ -167,8 +174,17 @@ public class MyPanelHi2 extends JPanel {
             // Получение дат инструмента
             Date fromDate = (Date) fromDatesField.getValue();
             Date tillDate = (Date) tillDatesField.getValue();
-            LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
-            LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
+            LocalDate fromLocalDate = fromDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate tillLocalDate = tillDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            Container container = candlesVolMarketProfileDemo5.getContentPane();
+            Component chartPanel = candlesVolMarketProfileDemo5.getChartPanel();
+            container.remove(chartPanel);
+            JPanel newPanel = candlesVolMarketProfileDemo5.createContent("new", 1);
+            candlesVolMarketProfileDemo5.add(newPanel, BorderLayout.CENTER);
+            chartPanel = newPanel;
+            chartPanel.revalidate();
+            candlesVolMarketProfileDemo5.repaint();
+
             System.out.println(selectedTicker);
             System.out.println(fromLocalDate);
             System.out.println(tillLocalDate);
@@ -204,7 +220,7 @@ public class MyPanelHi2 extends JPanel {
 
 
 //    public static void main(String[] args) {
-//        new MyPanel();
+//        new MyPanelHi2();
 //    }
 }
 

@@ -1,6 +1,9 @@
 package stepanovvv.ru.strategyPanel;
 
+import lombok.extern.slf4j.Slf4j;
+import org.jfree.chart.ChartPanel;
 import stepanovvv.ru.MyTerminal;
+import stepanovvv.ru.candlestick.JfreeChartPanel;
 import stepanovvv.ru.pop_up_warnings.WrongMove;
 
 import javax.swing.*;
@@ -10,14 +13,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.Arrays;
 import java.util.Date;
 
+@Slf4j
 public abstract class StrategyPanel extends JPanel {
     protected StrategyName strategyName;
+    protected String strategyUrl;
     protected int selected1;
     protected String[] dataList1;
     protected String[][] dataList2;
@@ -27,9 +30,13 @@ public abstract class StrategyPanel extends JPanel {
     protected final JButton buttonD1_Hi2;
     protected final ButtonGroup timeFramebuttonGroup;
     protected final JButton buttonCreateNewChart;
+    protected MyTerminal myTerminal;
 
-    public StrategyPanel() {
+
+    public StrategyPanel(MyTerminal myTerminal) {
+        this.myTerminal = myTerminal;
         strategyName = setStrategyName();
+        strategyUrl = setStrategyUrl();
         dataList1 = setDataList1();
         dataList2 = setDataList2();
 
@@ -122,9 +129,9 @@ public abstract class StrategyPanel extends JPanel {
                 if (e.getClickCount() == 1) {    // при одинарном клике мышью
                     //извлекаем даты из инструмента, по которым есть данные Hi2
                     String fromDate = "12.04.2020";
-                    String tillDate = "15.07.2024";
+                    String tillDate = "now date";
 
-                    String builder = "   -----possible dates----- \n" +
+                    String builder = "   --possible dates Algopack-- \n" +
                             "      from: " + fromDate + "\n" +
                             "      till: " + tillDate;
                     dateInfo.setText(builder);
@@ -135,18 +142,16 @@ public abstract class StrategyPanel extends JPanel {
         // Подключение слушателя мыши на кнопку запуска графика D1
         buttonD1_Hi2.addActionListener(e -> {
             // Действие при нажатии кнопки
-            // Получение тикера инструмента
-            String selected = list3.getSelectedValue();
-            if (selected != null) {
-                String selectedTicker = Arrays.stream(selected.split(" ")).findFirst().orElse(null);
-                // Получение дат инструмента
-                Date fromDate = (Date) fromDatesField.getValue();
-                Date tillDate = (Date) tillDatesField.getValue();
-                LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
-                LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
-                //Запуск программы с выбранными на панели параметрами
-                MyTerminal.addChart(strategyName, selectedTicker, fromLocalDate, tillLocalDate, Timeframe.D1_Hi2,
-                        checkBox2.isSelected(), checkBox3.isSelected(), checkBox4.isSelected());
+            // Получение вида инструмента
+            String selectedInstrumentOfList1 = list1.getSelectedValue();
+            // Получение подвида инструмента
+            String selectedInstrumentOfList2 = list2.getSelectedValue();
+            // Получение тикера инструмента (или даты экспирации для Spread3)
+            String selectedOfList3 = list3.getSelectedValue();
+            if (selectedOfList3 != null) {
+                /// Создание нового графика с заменой
+                createNewChart(myTerminal, selectedOfList3, selectedInstrumentOfList1, selectedInstrumentOfList2,
+                        Timeframe.D1_Hi2, checkBox2, checkBox3, checkBox4);
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
                 WrongMove.main(null);
@@ -176,22 +181,16 @@ public abstract class StrategyPanel extends JPanel {
             } else if (button_M1.isSelected()) {
                 timeframe = Timeframe.M1;
             }
-            // Получение тикера инструмента
-            String selected = list3.getSelectedValue();
-            if (selected != null) {
-                String selectedTicker = Arrays.stream(selected.split(" ")).findFirst().orElse(null);
-                // Получение дат инструмента
-                Date fromDate = (Date) fromDatesField.getValue();
-                Date tillDate = (Date) tillDatesField.getValue();
-                LocalDate fromLocalDate = LocalDate.ofEpochDay(fromDate.getTime() / 86_400_000);
-                LocalDate tillLocalDate = LocalDate.ofEpochDay(tillDate.getTime() / 86_400_000);
-                //Запуск программы с выбранными на панели параметрами
-                MyTerminal.addChart(strategyName,
-                        selectedTicker,
-                        fromLocalDate, tillLocalDate, timeframe,
-                        checkBox2.isSelected(), // Галочка-выбор убирать ли с графика выходные дни (субботу и воскресение)
-                        checkBox3.isSelected(), // Галочка-выбор добавлять ли график объемов
-                        checkBox4.isSelected()); // Галочка-выбор добавлять ли на график маркетпрофиль (горизонтальные объемы)
+            // Получение вида инструмента
+            String selectedInstrumentOfList1 = list1.getSelectedValue();
+            // Получение подвида инструмента
+            String selectedInstrumentOfList2 = list2.getSelectedValue();
+            // Получение тикера инструмента (или даты экспирации для Spread3)
+            String selectedOfList3 = list3.getSelectedValue();
+            if (selectedOfList3 != null) {
+                /// Создание нового графика с заменой
+                createNewChart(myTerminal, selectedOfList3, selectedInstrumentOfList1, selectedInstrumentOfList2,
+                        timeframe, checkBox2, checkBox3, checkBox4);
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
                 WrongMove.main(null);
@@ -230,9 +229,45 @@ public abstract class StrategyPanel extends JPanel {
         setVisible(true);
     }
 
+    /// Создание нового графика с заменой
+    private void createNewChart(MyTerminal myTerminal, String selectedOfList3, String selectedInstrumentOfList1, String selectedInstrumentOfList2, Timeframe timeframe, JCheckBox checkBox2, JCheckBox checkBox3, JCheckBox checkBox4) {
+        String selectedTickerOrExpDateOfList3 = Arrays.stream(selectedOfList3.split(" ")).findFirst().orElse(null);
+        // Получение дат инструмента
+        Date fromDate = (Date) fromDatesField.getValue();
+        Date tillDate = (Date) tillDatesField.getValue();
+        LocalDate fromLocalDate = fromDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate tillLocalDate = tillDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        // Создание нового графика с выбранными на панели параметрами
+        JfreeChartPanel newJfreeChart = new JfreeChartPanel(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
+                selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe,
+                checkBox2.isSelected(), // Галочка-выбор убирать ли с графика выходные дни (субботу и воскресение)
+                checkBox3.isSelected(), // Галочка-выбор добавлять ли график объемов
+                checkBox4.isSelected()); // Галочка-выбор добавлять ли на график маркетпрофиль (горизонтальные объемы)
+
+        // Со Swing-компонентами лучше работать в диспетчерском потоке событий (EDT), чтобы избегать проблем
+        // с конкурентным доступом. Для этого потребуется SwingUtilities.invokeLater()
+        SwingUtilities.invokeLater(() -> {
+            // Вносим изменения в интерфейс, всё под контролем...
+            Container container = myTerminal.getContentPane();
+            ChartPanel chartPanel = myTerminal.getChartPanel();
+            container.remove(chartPanel);
+            ChartPanel newChartPanel = newJfreeChart.getCommonChartPanel();
+            container.add(newChartPanel, BorderLayout.CENTER);
+            newChartPanel.revalidate(); // Подготавливаемся к обновлению макета
+            myTerminal.setChartPanel(newChartPanel); // сохраняем ссылку на обновленную панель с графиком
+            newChartPanel.repaint(); // Перерисовка - И теперь всё выглядит обновленным!
+        });
+    }
+
     public abstract StrategyName setStrategyName();
+
+    public abstract String setStrategyUrl();
+
     public abstract String[] setDataList1();
+
     public abstract String[][] setDataList2();
+
     public abstract JList<String> getStringJList1();
 
     private void addList1ListenerMoise(JList<String> list1, JList<String> list2, String[][] dataList2) {
