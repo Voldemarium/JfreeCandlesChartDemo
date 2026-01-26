@@ -51,7 +51,11 @@ public class MyTerminal extends JFrame {
         JfreeChartPanel jfreeChartPanel = new JfreeChartPanel(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
                 selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe, deletingHolidays, volume, marketProfile,
                 parametersMA);
+        ChartScrollBar chartScrollBar = new ChartScrollBar(Adjustable.HORIZONTAL, jfreeChartPanel.getCommonChart(),
+                jfreeChartPanel.getCommonChart().getXYPlot());
         this.chartPanel = jfreeChartPanel.getCommonChartPanel();
+        this.chartPanel.add(chartScrollBar, BorderLayout.SOUTH);;
+
         add(chartPanel, BorderLayout.CENTER);
         // Вспомогательная панель справа
         log.info("building \"richtPanel\"");

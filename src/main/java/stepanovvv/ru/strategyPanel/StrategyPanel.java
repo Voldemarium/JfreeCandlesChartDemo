@@ -48,6 +48,7 @@ public abstract class StrategyPanel extends JPanel {
         dataList1 = setDataList1();
         dataList2 = setDataList2();
 
+
         // Устанавливаем размер панели (заданные здесь ее размеры будут определять размеры всего окна Frame)
         this.setPreferredSize(new Dimension(180, 950));
 
@@ -277,6 +278,13 @@ public abstract class StrategyPanel extends JPanel {
             ChartPanel chartPanel = myTerminal.getChartPanel();
             container.remove(chartPanel);
             ChartPanel newChartPanel = newJfreeChart.getCommonChartPanel();
+
+            ChartScrollBar chartScrollBar = new ChartScrollBar(Adjustable.HORIZONTAL, newJfreeChart.getCommonChart(),
+                    newJfreeChart.getCommonChart().getXYPlot());
+//                    jfreeChartPanel.getCommonChart().getXYPlot());
+//            this.chartPanel = jfreeChartPanel.getCommonChartPanel();
+            newChartPanel.add(chartScrollBar, BorderLayout.SOUTH);;
+
             container.add(newChartPanel, BorderLayout.CENTER);
             newChartPanel.revalidate(); // Подготавливаемся к обновлению макета
             myTerminal.setChartPanel(newChartPanel); // сохраняем ссылку на обновленную панель с графиком

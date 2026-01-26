@@ -64,9 +64,14 @@ public class MyMovingAverage {
 
         double multiplier = 2.0 / (period + 1);
 
-        double first_time = source.getXValue(series, 0);
-        // Первое значение EMA - простое среднее за первые period значений
-        double firstSMA = source.getYValue(0, 0);
+      // Первое значение EMA - простое среднее за первые period значений
+        double first_time = source.getXValue(series, period);
+
+        List<Double> firstCloseList = new ArrayList<>();
+        for (int i = 0; i < period - 1; i++) {
+            firstCloseList.add(source.getYValue(0, i));
+        }
+        double firstSMA = firstCloseList.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
         emaValues.add(first_time, firstSMA);
 
         // Расчет последующих значений EMA
