@@ -5,21 +5,28 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jfree.chart.ChartPanel;
 import stepanovvv.ru.candlestick.JfreeChartPanel;
+import stepanovvv.ru.models.ParametersMA;
 import stepanovvv.ru.strategyPanel.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Getter
 @Setter
 public class MyTerminal extends JFrame {
     private ChartPanel chartPanel; // ссылка на панель с графиком
+//    public static final ZoneId zoneId = ZoneId.of("Europe/Moscow");
+    public static final ZoneId zoneId = ZoneId.of("Europe/Saratov");
+    public static final ZoneOffset zoneOffset = ZoneOffset.of("+4");
+
 
     public MyTerminal(StrategyName strategy, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                       String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                      Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
+                      Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile, ParametersMA parametersMA) {
         // Создание надписи над графиком = ticker
         super(selectedInstrumentOfList2 + " (" + selectedTickerOrExpDateOfList3 + ")");
         // Если это использовать, то не будут передвигаться дополнительно открытые окна
@@ -42,7 +49,8 @@ public class MyTerminal extends JFrame {
 
         // Создание графика
         JfreeChartPanel jfreeChartPanel = new JfreeChartPanel(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
-                selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe, deletingHolidays, volume, marketProfile);
+                selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe, deletingHolidays, volume, marketProfile,
+                parametersMA);
         this.chartPanel = jfreeChartPanel.getCommonChartPanel();
         add(chartPanel, BorderLayout.CENTER);
         // Вспомогательная панель справа
@@ -86,6 +94,7 @@ public class MyTerminal extends JFrame {
         LocalDate tillLocalDate = LocalDate.now();
         boolean volume = true;
         boolean marketProfile = true;
+        ParametersMA parametersMA = null;
 
         if (args.length == 1 && args[0].equals("BaseFutureSpread")) {
             log.info("building \"BaseFutureSpread\"");
@@ -93,7 +102,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_BASE_FUTURE_SPREAD, null,
                         null, ticker2, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -106,7 +115,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_FUTURE_SPREAD_2, null,
                         null, ticker3, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -119,7 +128,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_FUTURE_SPREAD_3, null,
                         null, ticker4, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -131,7 +140,7 @@ public class MyTerminal extends JFrame {
                 log.info("building \"START PANEL\"");
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_Hi2, null,
                         null, ticker, fromLocalDate, tillLocalDate, Timeframe.D1_Hi2,
-                        deletingHolidays, volume, marketProfile);
+                        deletingHolidays, volume, marketProfile, parametersMA);
                 // При закрытии стартовой панели приложение будет остановлено
                 app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами

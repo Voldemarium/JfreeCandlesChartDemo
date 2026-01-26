@@ -7,7 +7,6 @@ import stepanovvv.ru.service.MoexService;
 import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +32,9 @@ public class PanelFutureSpread_3 extends StrategyPanel {
         currency_future_spread_3 = setCurrencyFutureSpread_3();
         metal_future_spread_3 = setMetalFutureSpread_3();
         index_future_spread_3 = setIndexFutureSpread_3();
+
+//        Галочка-выбор добавлять ли на график EMA (Экспоненциальная скользящая средняя)
+        add(checkBox5);
     }
 
     public String[][] setCurrencyFutureSpread_3() {

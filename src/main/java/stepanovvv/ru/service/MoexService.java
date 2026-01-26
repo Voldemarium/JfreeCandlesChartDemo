@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import stepanovvv.ru.models.instrument_info.StockInfoDto;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
 import stepanovvv.ru.repository.MoexRepository;
+import stepanovvv.ru.strategyPanel.Timeframe;
 
 import java.util.List;
 

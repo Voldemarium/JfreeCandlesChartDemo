@@ -5,9 +5,11 @@ import stepanovvv.ru.MyTerminal;
 import stepanovvv.ru.models.instrument_info.StockInfoDto;
 import stepanovvv.ru.models.native_moex_models.native_instrument_info.FutureMoex;
 import stepanovvv.ru.pop_up_warnings.NoContent;
+import stepanovvv.ru.pop_up_warnings.WrongMove;
 import stepanovvv.ru.service.MoexService;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -19,8 +21,8 @@ public class PanelHi2 extends StrategyPanel {
 
     private static final StrategyName name = StrategyName.STRATEGY_Hi2;
     private static final String strategyUrl = "hi2";
-    private static final String[] list1 = new String[]{"Stocks", "Futures", "Currency"};
-    private static final String[][] list2 = new String[][]{
+    private static final String[] dataList1 = new String[]{"Stocks", "Futures", "Currency"};
+    private static final String[][] dataList2 = new String[][]{
             {"1 level", "2 level", "3 level"},                                // раскрытие list1[0] - для "Stocks"
             {"1 level", "2 level", "3 level", "индексы", "товары", "валюта"}, // раскрытие list1[1] - для "Futures"
             {"1 level", "2 level"}};                                          // раскрытие list1[2] - для "Currency"
@@ -37,7 +39,7 @@ public class PanelHi2 extends StrategyPanel {
     protected final JButton buttonBaseFutureSpread_Strategy;
     protected final JButton buttonFutureSpread_2_Strategy;
     protected final JButton buttonFutureSpread_3_Strategy;
-
+    protected final JButton buttonD1_Hi2;
 
     public PanelHi2(MyTerminal myTerminal) {
         super(myTerminal);
@@ -48,6 +50,7 @@ public class PanelHi2 extends StrategyPanel {
 //        currentsByLevels      = setCurrentsByLevels();
         setFuturesStocksByLevels();
         setCurrentsByLevels();
+
 
         buttonBaseFutureSpread_Strategy = new JButton("BaseFutureSpread_Strategy");
         buttonBaseFutureSpread_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"BaseFutureSpread"}));
@@ -60,6 +63,32 @@ public class PanelHi2 extends StrategyPanel {
         buttonFutureSpread_3_Strategy = new JButton("FutureSpread_3_Strategy");
         buttonFutureSpread_3_Strategy.addActionListener(e -> MyTerminal.main(new String[]{"FutureSpread_3"}));
         add(buttonFutureSpread_3_Strategy);
+
+        // 8. Создание кнопки отрисовки графиков
+        buttonD1_Hi2 = new JButton("Rendering Hi2 D1");
+
+        // Подключение слушателя мыши на кнопку запуска графика D1
+        buttonD1_Hi2.addActionListener(e -> {
+            // Действие при нажатии кнопки
+            // Получение вида инструмента
+            String selectedInstrumentOfList1 = list1.getSelectedValue();
+            // Получение подвида инструмента
+            String selectedInstrumentOfList2 = list2.getSelectedValue();
+            // Получение тикера инструмента (или даты экспирации для Spread3)
+            String selectedOfList3 = list3.getSelectedValue();
+            if (selectedOfList3 != null) {
+                /// Создание нового графика с заменой
+                createNewChart(myTerminal, selectedOfList3, selectedInstrumentOfList1, selectedInstrumentOfList2,
+                        Timeframe.D1_Hi2, checkBox2, checkBox3, checkBox4, checkBox5);
+
+            } else {
+                //  всплывающее окно-подсказка "Выберите инструмент!"
+                WrongMove.main(null);
+            }
+        });
+        add(checkBox4);
+
+        add(buttonD1_Hi2);
     }
 
     public void setStocksByLevels() {
@@ -130,12 +159,12 @@ public class PanelHi2 extends StrategyPanel {
 
     @Override
     public String[] setDataList1() {
-        return list1;
+        return dataList1;
     }
 
     @Override
     public String[][] setDataList2() {
-        return list2;
+        return dataList2;
     }
 
     @Override

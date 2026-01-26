@@ -10,21 +10,22 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.xy.CandlestickRenderer;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.chart.ui.RectangleEdge;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.Minute;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.*;
 import org.jfree.data.time.ohlc.OHLCSeries;
 import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import stepanovvv.ru.MyTerminal;
+import stepanovvv.ru.models.ParametersMA;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoexWithMetrics;
 import stepanovvv.ru.service.MoexService;
+import stepanovvv.ru.strategyPanel.MyMovingAverage;
 import stepanovvv.ru.strategyPanel.Timeframe;
 import stepanovvv.ru.models.native_moex_models.candles.CandleMoex;
 import stepanovvv.ru.models.native_moex_models.candles.MockListCandlesWithMetrics;
@@ -52,9 +53,8 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     // Формат времени для считывания данных из объекта свечи
 //    private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat READABLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
-//    private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
+    //    private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy";
     private static final String DISPLAY_DATE_FORMAT = "dd.MM.yy.HH.mm";
-    private final String offsetId = "+04:00";
 
     private final JFreeChart commonChart; // общий график
 
@@ -72,12 +72,13 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     // Создание графика
     public JfreeChartPanel(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                            String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                           Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
+                           Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile,
+                           ParametersMA parametersMA) {
         // Create new chart (Создание свечного графика)
         log.info("Create new chart");
         commonChart = createCommonChart(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
                 selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe,
-                deletingHolidays, volume, marketProfile);
+                deletingHolidays, volume, marketProfile, parametersMA);
         // Create new chart panel
         log.info("Create new chart panel");
         commonChartPanel = new ChartPanel(commonChart);
@@ -109,7 +110,8 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     /// Создание графика
     public JFreeChart createCommonChart(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                                         String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                                        Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile) {
+                                        Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile,
+                                        ParametersMA parametersMA) {
         log.info("Download candleMoexList");
         List<CandleMoex> candleMoexList = new ArrayList<>();
         List<CandleMoexWithMetrics> candleMoexWithMetricsList = new ArrayList<>();
@@ -141,7 +143,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         // 1. Создаем график свечей
         log.info("Create new chart with candleMoex");
         String title = selectedInstrumentOfList2 + " (" + selectedTickerOrExpDateOfList3 + ")";
-        JFreeChart candlesChart = createCandlesChart("Candles " + title, marketProfile);
+        JFreeChart candlesChart = createCandlesChart("Candles " + title, marketProfile, parametersMA);
         // 2. Создаем график метрик Hi2
         log.info("Create new chart with metrics Hi2");
         JFreeChart metricsHi2Chart = null;
@@ -198,7 +200,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     }
 
 
-    private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile) {
+    private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile, ParametersMA parametersMA) {
         // Создаем график фабричным методом
         JFreeChart candlestickChart = ChartFactory.createCandlestickChart(chartTitle, "time", "Price",
                 ohlcDataSet, true);
@@ -236,6 +238,24 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
             plot.mapDatasetToDomainAxis(1, 1);
         }
 
+        if (parametersMA != null) {
+            // Create MA (средняя скользящая)
+            int periodMA = parametersMA.getPeriodMA();
+            log.info("Create MA with period {}", periodMA);
+//            plot.setRangeAxis(1, new NumberAxis("MA"));
+            XYDataset ema_0 = MyMovingAverage.createMovingAverage(ohlcDataSet, "MA", periodMA);
+
+            // Вычисляем стандартное отклонние
+            XYSeries stdDevSeries = MyMovingAverage.calculateExponentialStdDev(ohlcDataSet, ema_0,  "Std", periodMA);
+            XYDataset[] ema_1_2 = MyMovingAverage.createMovingAverage_1_2(ema_0, stdDevSeries, "ema_1", "ema2");
+
+            plot.setDataset(1, ema_0);
+            plot.setDataset(2, ema_1_2[0]);
+            plot.setDataset(3, ema_1_2[1]);
+            plot.setRenderer(1, new StandardXYItemRenderer());
+            plot.setRenderer(2, new StandardXYItemRenderer());
+            plot.setRenderer(3, new StandardXYItemRenderer());
+        }
         return candlestickChart;
     }
 
@@ -325,7 +345,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         for (int i = 0; i < candleMoexList.size(); i++) {
             CandleMoex candleMoex = candleMoexList.get(i);
             LocalDateTime dateTimeOpen = candleMoex.getBegin();
-            Date openTime = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
+            Date openTime = new Date(dateTimeOpen.toEpochSecond(MyTerminal.zoneOffset) * 1000);
             Minute openMinute = new Minute(openTime);
 //            Day t = new Day(openTime);
             // добавление свечи
@@ -348,7 +368,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         for (int i = 0; i < candleMoexWithMetricsList.size(); i++) {
             CandleMoexWithMetrics candleMoexWithMetrics = candleMoexWithMetricsList.get(i);
             LocalDateTime dateTimeOpen = candleMoexWithMetrics.getCandleMoex().getBegin();
-            Date date = new Date(dateTimeOpen.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
+            Date date = new Date(dateTimeOpen.toEpochSecond(MyTerminal.zoneOffset) * 1000);
             Day t = new Day(date);
             // добавление метрик
             if (i == 0) {
@@ -361,7 +381,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
                 buyMetricSeries.add(t, prevBuy);
                 sellMetricSeries.add(t, prevSell);
                 LocalDateTime dateTimeOpen2 = candleMoexWithMetrics.getCandleMoex().getBegin().plusDays(1);
-                Date date2 = new Date(dateTimeOpen2.toEpochSecond(ZoneOffset.of(offsetId)) * 1000);
+                Date date2 = new Date(dateTimeOpen2.toEpochSecond(MyTerminal.zoneOffset) * 1000);
                 Day t2 = new Day(date2);
                 buyMetricSeries.add(t2, candleMoexWithMetrics.getBuyMetric());
                 sellMetricSeries.add(t2, candleMoexWithMetrics.getSellMetric());
@@ -435,9 +455,24 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
             // Преобразование значения x из формата double в LocalDate
             this.xCrosshair.setLabelGenerator(crosshair -> {
                 Instant instant = Instant.ofEpochMilli((long) crosshair.getValue());
-                LocalDate localDate = LocalDate.ofInstant(instant, ZoneId.of(offsetId));
+                LocalDate localDate = LocalDate.ofInstant(instant, MyTerminal.zoneOffset);
                 return DateTimeFormatter.ofPattern("dd.MM").format(localDate);
             });
         }
+    }
+
+    public static int getIntervalMinutes(Timeframe interval) {
+        int intervalMinutes = 0;
+        switch (interval) {
+            case M1 -> intervalMinutes = 1;
+            case M5 -> intervalMinutes = 5;
+            case M10 -> intervalMinutes = 10;
+            case M15 -> intervalMinutes = 15;
+            case M30 -> intervalMinutes = 30;
+            case H1 -> intervalMinutes = 60;
+            case H4 -> intervalMinutes = 240;
+            case D1 -> intervalMinutes = 60 * 24;
+        }
+        return intervalMinutes;
     }
 }
