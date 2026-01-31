@@ -40,6 +40,8 @@ public abstract class StrategyPanel extends JPanel {
     final JCheckBox checkBox3;
     final JCheckBox checkBox4;
     final JCheckBox checkBox5;
+    final JCheckBox checkBox6;
+    final JCheckBox checkBox7;
 
     public StrategyPanel(MyTerminal myTerminal) {
         this.myTerminal = myTerminal;
@@ -101,6 +103,8 @@ public abstract class StrategyPanel extends JPanel {
         checkBox4 = new JCheckBox("market profile");
         // 7.5. Галочка-выбор добавлять ли на график EMA (Экспоненциальная скользящая средняя)
         checkBox5 = new JCheckBox("    add EMA     ");
+        checkBox6 = new JCheckBox("    add EMA_D1  ");
+        checkBox7 = new JCheckBox("    add EMA_W   ");
 
         // Создание форматированного текстового поля для параметров EMA
         periodEMAField = new JFormattedTextField();
@@ -156,7 +160,6 @@ public abstract class StrategyPanel extends JPanel {
 //        });
 
 
-
         buttonCreateNewChart.addActionListener(e -> {
             Timeframe timeframe = null;
             if (button_M.isSelected()) {
@@ -191,7 +194,7 @@ public abstract class StrategyPanel extends JPanel {
             if (selectedOfList3 != null) {
                 /// Создание нового графика с заменой
                 createNewChart(myTerminal, selectedOfList3, selectedInstrumentOfList1, selectedInstrumentOfList2,
-                        timeframe, checkBox2, checkBox3, checkBox4, checkBox5);
+                        timeframe, checkBox2, checkBox3, checkBox4, checkBox5, checkBox6, checkBox7);
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
                 WrongMove.main(null);
@@ -214,7 +217,7 @@ public abstract class StrategyPanel extends JPanel {
         add(checkBox2);
         add(checkBox3);
 
-       // добавляем кнопки из группы кнопок timeFramebuttonGroup
+        // добавляем кнопки из группы кнопок timeFramebuttonGroup
         add(button_M);
         add(button_W);
         add(button_D1);
@@ -227,6 +230,8 @@ public abstract class StrategyPanel extends JPanel {
         add(button_M1);
 
         add(checkBox5);
+        add(checkBox6);
+        add(checkBox7);
         add(new JLabel("period EMA"));
         add(periodEMAField);
 
@@ -237,7 +242,8 @@ public abstract class StrategyPanel extends JPanel {
     /// Создание нового графика с заменой
     void createNewChart(MyTerminal myTerminal, String selectedOfList3, String selectedInstrumentOfList1,
                         String selectedInstrumentOfList2, Timeframe timeframe,
-                        JCheckBox checkBox2, JCheckBox checkBox3, JCheckBox checkBox4, JCheckBox checkBox5) {
+                        JCheckBox checkBox2, JCheckBox checkBox3, JCheckBox checkBox4, JCheckBox checkBox5,
+                        JCheckBox checkBox6, JCheckBox checkBox7) {
         String selectedTickerOrExpDateOfList3 = Arrays.stream(selectedOfList3.split(" ")).findFirst().orElse(null);
         // Получение дат инструмента
         Date fromDate = (Date) fromDatesField.getValue();
@@ -259,7 +265,16 @@ public abstract class StrategyPanel extends JPanel {
                 parametersMA = new ParametersMA();
                 parametersMA.setPeriodMA(periodMA);
             }
+        }
 
+        boolean ema_D1 = false;
+        if (checkBox6.isSelected()) {
+            ema_D1 = true;
+        }
+
+        boolean ema_W = false;
+        if (checkBox7.isSelected()) {
+            ema_W = true;
         }
 
         // Создание нового графика с выбранными на панели параметрами
@@ -268,8 +283,11 @@ public abstract class StrategyPanel extends JPanel {
                 checkBox2.isSelected(), // Галочка-выбор убирать ли с графика выходные дни (субботу и воскресение)
                 checkBox3.isSelected(), // Галочка-выбор добавлять ли график объемов
                 isMarketProfile,        // Галочка-выбор добавлять ли на график маркетпрофиль (горизонтальные объемы)
-                parametersMA);         // Добавлять на график EMA
+                parametersMA,          // Добавлять на график EMA
+                ema_D1,                // Добавлять на график EMA с периодом 1 день
+                ema_W                  // Добавлять на график EMA с периодом 1 неделя
 
+        );
         // Со Swing-компонентами лучше работать в диспетчерском потоке событий (EDT), чтобы избегать проблем
         // с конкурентным доступом. Для этого потребуется SwingUtilities.invokeLater()
         SwingUtilities.invokeLater(() -> {
@@ -283,7 +301,8 @@ public abstract class StrategyPanel extends JPanel {
                     newJfreeChart.getCommonChart().getXYPlot());
 //                    jfreeChartPanel.getCommonChart().getXYPlot());
 //            this.chartPanel = jfreeChartPanel.getCommonChartPanel();
-            newChartPanel.add(chartScrollBar, BorderLayout.SOUTH);;
+            newChartPanel.add(chartScrollBar, BorderLayout.SOUTH);
+            ;
 
             container.add(newChartPanel, BorderLayout.CENTER);
             newChartPanel.revalidate(); // Подготавливаемся к обновлению макета

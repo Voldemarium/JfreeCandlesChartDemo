@@ -26,7 +26,8 @@ public class MyTerminal extends JFrame {
 
     public MyTerminal(StrategyName strategy, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                       String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
-                      Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile, ParametersMA parametersMA) {
+                      Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile, ParametersMA parametersMA,
+                      boolean ema_D1, boolean ema_W) {
         // Создание надписи над графиком = ticker
         super(selectedInstrumentOfList2 + " (" + selectedTickerOrExpDateOfList3 + ")");
         // Если это использовать, то не будут передвигаться дополнительно открытые окна
@@ -50,7 +51,7 @@ public class MyTerminal extends JFrame {
         // Создание графика
         JfreeChartPanel jfreeChartPanel = new JfreeChartPanel(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
                 selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe, deletingHolidays, volume, marketProfile,
-                parametersMA);
+                parametersMA, ema_D1, ema_W);
         ChartScrollBar chartScrollBar = new ChartScrollBar(Adjustable.HORIZONTAL, jfreeChartPanel.getCommonChart(),
                 jfreeChartPanel.getCommonChart().getXYPlot());
         this.chartPanel = jfreeChartPanel.getCommonChartPanel();
@@ -99,6 +100,8 @@ public class MyTerminal extends JFrame {
         boolean volume = true;
         boolean marketProfile = true;
         ParametersMA parametersMA = null;
+        boolean ema_D1 = false;
+        boolean ema_W = false;
 
         if (args.length == 1 && args[0].equals("BaseFutureSpread")) {
             log.info("building \"BaseFutureSpread\"");
@@ -106,7 +109,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_BASE_FUTURE_SPREAD, null,
                         null, ticker2, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA, ema_D1, ema_W);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -119,7 +122,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_FUTURE_SPREAD_2, null,
                         null, ticker3, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA, ema_D1, ema_W);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -132,7 +135,7 @@ public class MyTerminal extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_FUTURE_SPREAD_3, null,
                         null, ticker4, fromLocalDate, tillLocalDate,
-                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA);
+                        Timeframe.D1, deletingHolidays, volume, marketProfile, parametersMA, ema_D1, ema_W);
                 //JFrame.DISPOSE_ON_CLOSE Убирает окно с экрана и освобождает все принадлежащие ему ресурсы
                 app.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами
@@ -144,7 +147,7 @@ public class MyTerminal extends JFrame {
                 log.info("building \"START PANEL\"");
                 MyTerminal app = new MyTerminal(StrategyName.STRATEGY_Hi2, null,
                         null, ticker, fromLocalDate, tillLocalDate, Timeframe.D1_Hi2,
-                        deletingHolidays, volume, marketProfile, parametersMA);
+                        deletingHolidays, volume, marketProfile, parametersMA, ema_D1, ema_W);
                 // При закрытии стартовой панели приложение будет остановлено
                 app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 app.pack();  // оптимальный размер окна с компонентами

@@ -73,12 +73,12 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     public JfreeChartPanel(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                            String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
                            Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile,
-                           ParametersMA parametersMA) {
+                           ParametersMA parametersMA, boolean ema_D1, boolean ema_W) {
         // Create new chart (Создание свечного графика)
         log.info("Create new chart");
         commonChart = createCommonChart(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
                 selectedTickerOrExpDateOfList3, fromLocalDate, tillLocalDate, timeframe,
-                deletingHolidays, volume, marketProfile, parametersMA);
+                deletingHolidays, volume, marketProfile, parametersMA, ema_D1, ema_W);
         // Create new chart panel
         log.info("Create new chart panel");
         commonChartPanel = new ChartPanel(commonChart);
@@ -111,7 +111,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     public JFreeChart createCommonChart(String strategyUrl, String selectedInstrumentOfList1, String selectedInstrumentOfList2,
                                         String selectedTickerOrExpDateOfList3, LocalDate fromLocalDate, LocalDate tillLocalDate,
                                         Timeframe timeframe, boolean deletingHolidays, boolean volume, boolean marketProfile,
-                                        ParametersMA parametersMA) {
+                                        ParametersMA parametersMA, boolean ema_D1, boolean ema_W) {
         log.info("Download candleMoexList");
         List<CandleMoex> candleMoexList = new ArrayList<>();
         List<CandleMoexWithMetrics> candleMoexWithMetricsList = new ArrayList<>();
@@ -143,7 +143,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         // 1. Создаем график свечей
         log.info("Create new chart with candleMoex");
         String title = selectedInstrumentOfList2 + " (" + selectedTickerOrExpDateOfList3 + ")";
-        JFreeChart candlesChart = createCandlesChart("Candles " + title, marketProfile, parametersMA);
+        JFreeChart candlesChart = createCandlesChart("Candles " + title, marketProfile, parametersMA, ema_D1, ema_W);
         // 2. Создаем график метрик Hi2
         log.info("Create new chart with metrics Hi2");
         JFreeChart metricsHi2Chart = null;
@@ -200,7 +200,8 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
     }
 
 
-    private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile, ParametersMA parametersMA) {
+    private JFreeChart createCandlesChart(String chartTitle, boolean marketProfile, ParametersMA parametersMA,
+                                          boolean ema_D1, boolean ema_W) {
         // Создаем график фабричным методом
         JFreeChart candlestickChart = ChartFactory.createCandlestickChart(chartTitle, "time", "Price",
                 ohlcDataSet, true);
@@ -245,8 +246,8 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
 //            plot.setRangeAxis(1, new NumberAxis("MA"));
             XYDataset ema_0 = MyMovingAverage.createMovingAverage(ohlcDataSet, "MA", periodMA);
 
-            // Вычисляем стандартное отклонние
-            XYSeries stdDevSeries = MyMovingAverage.calculateExponentialStdDev(ohlcDataSet, ema_0,  "Std", periodMA);
+            // Вычисляем стандартное отклоние
+            XYSeries stdDevSeries = MyMovingAverage.calculateExponentialStdDev(ema_0, ohlcDataSet,"Std", periodMA);
             XYDataset[] ema_1_2 = MyMovingAverage.createMovingAverage_1_2(ema_0, stdDevSeries, "ema_1", "ema2");
 
             plot.setDataset(1, ema_0);
@@ -256,6 +257,23 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
             plot.setRenderer(2, new StandardXYItemRenderer());
             plot.setRenderer(3, new StandardXYItemRenderer());
         }
+
+        if (ema_D1) {
+            log.info("Create MA with period D1");
+            XYDataset datasetEma_D1 = MyMovingAverage.createMovingAverageTimeD1(ohlcDataSet, "MA_D1");
+            // Вычисляем стандартное отклонение
+            XYSeries stdDevSeries = MyMovingAverage.calculateExponentialStdDevByD1(datasetEma_D1, ohlcDataSet, "Std_D1");
+            XYDataset[] ema_1_2 = MyMovingAverage.createMovingAverage_1_2(datasetEma_D1, stdDevSeries, "emaD1_1", "emaD1_2");
+
+            plot.setDataset(4, datasetEma_D1);
+            plot.setDataset(5, ema_1_2[0]);
+            plot.setDataset(6, ema_1_2[1]);
+            plot.setRenderer(4, new StandardXYItemRenderer());
+            plot.setRenderer(5, new StandardXYItemRenderer());
+            plot.setRenderer(6, new StandardXYItemRenderer());
+        }
+
+
         return candlestickChart;
     }
 

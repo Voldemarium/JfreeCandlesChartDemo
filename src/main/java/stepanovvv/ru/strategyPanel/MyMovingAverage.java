@@ -7,18 +7,100 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.*;
 
 @Slf4j
 public class MyMovingAverage {
-    /// suffix - это название скользящей
-    /// period - это период расчета средней скользящей в миллисек. (например для периода 20 на графике H1
-    /// period = 1000 * 60 * 60)
-//    public static XYDataset createMovingAverageDataSet(XYDataset source, String suffix, int period) {
-//        return createMovingAverage(source, suffix, period);
-//    }
+    /// name - это название скользящей
+    /// period - это период расчета средней скользящей - кол-во свечей
 
+    /// Метод для вычисления EMA по заданному периоду (D1 или W)
+    public static XYDataset createMovingAverageTimeD1(XYDataset source, String name) {
+        Args.nullNotPermitted(source, "source"); // проверка на null  source
+        XYSeriesCollection result = new XYSeriesCollection();
+        int seriesCount = source.getSeriesCount();  // = 1 (содержится 1 серия)
+        int series = 0;
+        if (seriesCount > 1) {
+            log.error("seriesCount > 1");
+        }
+        // Вычисляем кол-во свеч в каждом дне
+        LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = countingNumberCandlesPerDay(source, series);
+        LocalDate firstLocalDate = numberOfCandlesPerDayMap.entrySet().iterator().next().getKey();
+
+        LocalDate prevDay = null;
+        List<Double> valuesByPeriod = new ArrayList<>();
+        XYSeries emaValues = new XYSeries(name);
+        int period;
+        double multiplier = 0;
+
+        for (int i = 0; i < source.getItemCount(series); i++) {
+            double current_time = source.getXValue(series, i);
+            double currentValue = source.getYValue(series, i);
+            Date currentDate = new Date(Math.round(current_time));
+            LocalDate currentLocalDate = new Timestamp(currentDate.getTime()).toLocalDateTime().toLocalDate();
+            if (i == 0) {
+                prevDay = currentLocalDate;
+                valuesByPeriod.add(currentValue);
+            } else {
+                if (currentLocalDate.isAfter(prevDay)) {
+                    period = numberOfCandlesPerDayMap.get(prevDay);
+                    multiplier = 2.0 / (period + 1);
+                    // Первое значение EMA
+                    // Первое значение времени для расчета EMA
+//                    double first_time = current_time;
+                    // Первое значение EMA - простое среднее за первые period значений
+                    double firstSMA = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+                    emaValues.add(current_time, firstSMA);
+                    prevDay = currentLocalDate;
+                    valuesByPeriod.clear();
+                } else if (currentLocalDate.equals(prevDay)) {
+                    valuesByPeriod.add(currentValue);
+                    if (currentLocalDate.isAfter(firstLocalDate)) {
+                        // Расчет последующих значений EMA
+                        double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
+                        double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+                        emaValues.add(current_time, currentEMA);
+//                        valuesByPeriod.add(currentValue);
+                    }
+                } else {
+                    log.error("incorrect LocalDate!!!");
+                }
+            }
+        }
+        result.addSeries(emaValues);
+        log.info("asd");
+        return result;
+    }
+
+    // Вычисляем кол-во свеч в каждом дне
+    private static LinkedHashMap<LocalDate, Integer> countingNumberCandlesPerDay(XYDataset source, int series) {
+        LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = new LinkedHashMap<>();
+        LocalDate prevDay = null;
+        int numberOfCandles = 0;
+        for (int i = 0; i < source.getItemCount(series); i++) {
+            double current_time = source.getXValue(series, i);
+            Date currentDate = new Date(Math.round(current_time));
+            LocalDate currentLocalDate = new Timestamp(currentDate.getTime()).toLocalDateTime().toLocalDate();
+            if (i == 0) {
+                prevDay = currentLocalDate;
+                numberOfCandles++;
+            } else {
+                if (currentLocalDate.equals(prevDay)) {
+                    numberOfCandles++;
+                } else {
+                    numberOfCandlesPerDayMap.put(prevDay, numberOfCandles);
+                    prevDay = currentLocalDate;
+                    numberOfCandles = 1;
+                }
+            }
+        }
+        return numberOfCandlesPerDayMap;
+    }
+
+
+    /// Метод для вычисления EMA по заданному периоду (кол-ву свеч)
     public static XYDataset createMovingAverage(XYDataset source, String suffix, int period) {
         Args.nullNotPermitted(source, "source"); // проверка на null  source
         XYSeriesCollection result = new XYSeriesCollection();
@@ -30,6 +112,7 @@ public class MyMovingAverage {
         return result;
     }
 
+    /// Метод для вычисления нижней и верхней полосы Боллинжера (+- 1 стандартное отклонение)
     public static XYDataset[] createMovingAverage_1_2(XYDataset ema_0, XYSeries stdDevValues,
                                                       String name1, String name2) {
         XYSeriesCollection result_1 = new XYSeriesCollection();
@@ -38,22 +121,22 @@ public class MyMovingAverage {
         XYSeries xySeries_2 = new XYSeries(name2);
         if (ema_0.getItemCount(0) == stdDevValues.getItemCount()) {
             for (int i = 0; i < stdDevValues.getItemCount(); i++) {
-                 double value_1 = ema_0.getYValue(0, i) + stdDevValues.getY(i).doubleValue();
-                 double value_2 = ema_0.getYValue(0, i) - stdDevValues.getY(i).doubleValue();
-                 xySeries_1.add(ema_0.getXValue(0, i), value_1);
-                 xySeries_2.add(ema_0.getXValue(0, i), value_2);
+                double value_1 = ema_0.getYValue(0, i) + stdDevValues.getY(i).doubleValue();
+                double value_2 = ema_0.getYValue(0, i) - stdDevValues.getY(i).doubleValue();
+                xySeries_1.add(ema_0.getXValue(0, i), value_1);
+                xySeries_2.add(ema_0.getXValue(0, i), value_2);
             }
             result_1.addSeries(xySeries_1);
             result_2.addSeries(xySeries_2);
         } else {
             log.error("The number of elements does not match!!!");
         }
-        return new XYDataset[] {result_1, result_2};
+        return new XYDataset[]{result_1, result_2};
     }
 
 
     /**
-    // реализация вычисления экспоненциальной скользящей средней (EMA)
+     * // реализация вычисления экспоненциальной скользящей средней (EMA)
      */
     public static XYSeries calculateEMA(XYDataset source, int series, String name, int period) {
         Args.nullNotPermitted(source, "source");
@@ -64,7 +147,7 @@ public class MyMovingAverage {
 
         double multiplier = 2.0 / (period + 1);
 
-      // Первое значение EMA - простое среднее за первые period значений
+        // Первое значение EMA - простое среднее за первые period значений
         double first_time = source.getXValue(series, period);
 
         List<Double> firstCloseList = new ArrayList<>();
@@ -86,17 +169,76 @@ public class MyMovingAverage {
     }
 
 
+    /**
+     * Вычисляем экспоненциальное скользящее стандартное отклонение для периода D1
+     */
+    public static XYSeries calculateExponentialStdDevByD1(XYDataset ema,OHLCDataset source,  String name) {
+        int seriesCount = source.getSeriesCount();  // = 1 (содержится 1 серия)
+        int series = 0;
+        if (seriesCount > 1) {
+            log.error("seriesCount > 1");
+        }
+        XYSeries stdDevValues = new XYSeries(name);
+
+        // Вычисляем кол-во свеч в каждом дне
+        LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = countingNumberCandlesPerDay(source, series);
+        LocalDate firstLocalDate = numberOfCandlesPerDayMap.entrySet().iterator().next().getKey();
+        LocalDate prevDay = null;
+        List<Double> valuesByPeriod = new ArrayList<>();
+        int period = 0;
+        double multiplier = 0;
+        for (int i = 0; i < source.getItemCount(series); i++) {
+            double currentTime = source.getXValue(series, i);
+            double currentHighValue = source.getHighValue(series, i);
+            double currentLowValue = source.getLowValue(series, i);
+            Date currentDate = new Date(Math.round(currentTime));
+            LocalDate currentLocalDate = new Timestamp(currentDate.getTime()).toLocalDateTime().toLocalDate();
+            if (i == 0) {
+                prevDay = currentLocalDate;
+                valuesByPeriod.add(currentHighValue);
+                valuesByPeriod.add(currentLowValue);
+            } else {
+                if (currentLocalDate.isAfter(prevDay)) {
+                    period = numberOfCandlesPerDayMap.get(prevDay);
+                    multiplier = 2.0 / (period + 1);
+                    // Первое значение STD
+                    // Первое значение времени для расчета STD
+//                    double first_time = source.getXValue(series, period);
+                    // Первое значение STD - обычное стандартное отклонение
+                    double firstStdDev = calculateStdDev(valuesByPeriod);
+                    stdDevValues.add(currentTime, firstStdDev);
+                    prevDay = currentLocalDate;
+                    valuesByPeriod.clear();
+                } else if (currentLocalDate.equals(prevDay)) {
+                    valuesByPeriod.add(currentHighValue);
+                    valuesByPeriod.add(currentLowValue);
+                    if (currentLocalDate.isAfter(firstLocalDate)) {
+                        // Расчет последующих значений STD
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - period));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - period));
+                        double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
+                        double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
+                        stdDevValues.add(currentTime, currentStdDev);
+                    }
+                } else {
+                    log.error("incorrect LocalDate!!!");
+                }
+            }
+        }
+        return stdDevValues;
+    }
+
 
     /**
      * Вычисляем экспоненциальное скользящее стандартное отклонение
      */
-    public static XYSeries calculateExponentialStdDev(OHLCDataset source, XYDataset ema, String name, int period) {
+    public static XYSeries calculateExponentialStdDev(XYDataset ema,OHLCDataset source,  String name, int period) {
         if (source.getItemCount(0) < period) {
             return new XYSeries(name);
         }
         XYSeries stdDevValues = new XYSeries(name);
 //        XYDataset ema = createMovingAverage(source, suffix, period);
-        double alpha = 2.0 / (period + 1);
+        double multiplier = 2.0 / (period + 1);
 
         // Первое значение времени для стандартного отклонения
         double first_time = source.getXValue(0, period);
@@ -115,7 +257,7 @@ public class MyMovingAverage {
             double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - period));
             double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - period));
             double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
-            double currentStdDev = prevStdDev + alpha * (Math.max(highDeviation, lowDeviation) - prevStdDev);
+            double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
             stdDevValues.add(currentTime, currentStdDev);
         }
         return stdDevValues;

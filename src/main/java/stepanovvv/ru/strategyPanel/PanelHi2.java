@@ -79,7 +79,7 @@ public class PanelHi2 extends StrategyPanel {
             if (selectedOfList3 != null) {
                 /// Создание нового графика с заменой
                 createNewChart(myTerminal, selectedOfList3, selectedInstrumentOfList1, selectedInstrumentOfList2,
-                        Timeframe.D1_Hi2, checkBox2, checkBox3, checkBox4, checkBox5);
+                        Timeframe.D1_Hi2, checkBox2, checkBox3, checkBox4, checkBox5, checkBox6, checkBox7);
 
             } else {
                 //  всплывающее окно-подсказка "Выберите инструмент!"
