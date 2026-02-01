@@ -267,15 +267,8 @@ public abstract class StrategyPanel extends JPanel {
             }
         }
 
-        boolean ema_D1 = false;
-        if (checkBox6.isSelected()) {
-            ema_D1 = true;
-        }
-
-        boolean ema_W = false;
-        if (checkBox7.isSelected()) {
-            ema_W = true;
-        }
+        boolean ema_D1 = checkBox6.isSelected();
+        boolean ema_W = checkBox7.isSelected();
 
         // Создание нового графика с выбранными на панели параметрами
         JfreeChartPanel newJfreeChart = new JfreeChartPanel(strategyUrl, selectedInstrumentOfList1, selectedInstrumentOfList2,
@@ -302,7 +295,6 @@ public abstract class StrategyPanel extends JPanel {
 //                    jfreeChartPanel.getCommonChart().getXYPlot());
 //            this.chartPanel = jfreeChartPanel.getCommonChartPanel();
             newChartPanel.add(chartScrollBar, BorderLayout.SOUTH);
-            ;
 
             container.add(newChartPanel, BorderLayout.CENTER);
             newChartPanel.revalidate(); // Подготавливаемся к обновлению макета

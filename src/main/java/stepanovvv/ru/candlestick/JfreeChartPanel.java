@@ -9,10 +9,7 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.panel.CrosshairOverlay;
 import org.jfree.chart.plot.*;
-import org.jfree.chart.renderer.xy.CandlestickRenderer;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYBarRenderer;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.renderer.xy.*;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.time.*;
 import org.jfree.data.time.ohlc.OHLCSeries;
@@ -273,7 +270,27 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
             plot.setRenderer(6, new StandardXYItemRenderer());
         }
 
+        if (ema_W) {
+            log.info("Create MA with period W");
+            XYDataset datasetEma_W = MyMovingAverage.createMovingAverageTimeW(ohlcDataSet, "MA_W");
+            // Вычисляем стандартное отклонение
+            XYSeries stdDevSeries = MyMovingAverage.calculateExponentialStdDevByW(datasetEma_W, ohlcDataSet, "Std_W");
+            XYDataset[] ema_1_2 = MyMovingAverage.createMovingAverage_1_2(datasetEma_W, stdDevSeries, "emaW_1", "emaW_2");
 
+            plot.setDataset(7, datasetEma_W);
+            plot.setDataset(8, ema_1_2[0]);
+            plot.setDataset(9, ema_1_2[1]);
+            StandardXYItemRenderer rendererEma_W_1 = new StandardXYItemRenderer();
+            XYDotRenderer xyDotRenderer = new XYDotRenderer();
+            xyDotRenderer.setDotWidth(5);
+            xyDotRenderer.setDotHeight(5);
+//            plot.setRenderer(7, rendererEma_W_1);
+            plot.setRenderer(7, xyDotRenderer);
+            plot.setRenderer(8, xyDotRenderer);
+            plot.setRenderer(9, xyDotRenderer);
+
+
+        }
         return candlestickChart;
     }
 
@@ -360,8 +377,7 @@ public class JfreeChartPanel extends JPanel implements ChartMouseListener {
         OHLCSeries ohlcSeries = new OHLCSeries("candles");
         TimeSeries volumeSeries = new TimeSeries("volume");
         // Добавляем свечи на график в цикле
-        for (int i = 0; i < candleMoexList.size(); i++) {
-            CandleMoex candleMoex = candleMoexList.get(i);
+        for (CandleMoex candleMoex : candleMoexList) {
             LocalDateTime dateTimeOpen = candleMoex.getBegin();
             Date openTime = new Date(dateTimeOpen.toEpochSecond(MyTerminal.zoneOffset) * 1000);
             Minute openMinute = new Minute(openTime);

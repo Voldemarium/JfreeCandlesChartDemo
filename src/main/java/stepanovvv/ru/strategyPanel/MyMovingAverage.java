@@ -6,9 +6,11 @@ import org.jfree.data.xy.OHLCDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import stepanovvv.ru.models.WeekNumberAndYear;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.*;
 
 @Slf4j
@@ -16,7 +18,7 @@ public class MyMovingAverage {
     /// name - это название скользящей
     /// period - это период расчета средней скользящей - кол-во свечей
 
-    /// Метод для вычисления EMA по заданному периоду (D1 или W)
+    /// Метод для вычисления EMA по заданному периоду (D1)
     public static XYDataset createMovingAverageTimeD1(XYDataset source, String name) {
         Args.nullNotPermitted(source, "source"); // проверка на null  source
         XYSeriesCollection result = new XYSeriesCollection();
@@ -47,9 +49,6 @@ public class MyMovingAverage {
                 if (currentLocalDate.isAfter(prevDay)) {
                     period = numberOfCandlesPerDayMap.get(prevDay);
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение EMA
-                    // Первое значение времени для расчета EMA
-//                    double first_time = current_time;
                     // Первое значение EMA - простое среднее за первые period значений
                     double firstSMA = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
                     emaValues.add(current_time, firstSMA);
@@ -62,7 +61,6 @@ public class MyMovingAverage {
                         double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
                         double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
                         emaValues.add(current_time, currentEMA);
-//                        valuesByPeriod.add(currentValue);
                     }
                 } else {
                     log.error("incorrect LocalDate!!!");
@@ -70,8 +68,92 @@ public class MyMovingAverage {
             }
         }
         result.addSeries(emaValues);
-        log.info("asd");
         return result;
+    }
+
+    /// Метод для вычисления EMA по заданному периоду (W)
+    public static XYDataset createMovingAverageTimeW(XYDataset source, String name) {
+        Args.nullNotPermitted(source, "source"); // проверка на null  source
+        XYSeriesCollection result = new XYSeriesCollection();
+        int seriesCount = source.getSeriesCount();  // = 1 (содержится 1 серия)
+        int series = 0;
+        if (seriesCount > 1) {
+            log.error("seriesCount > 1");
+        }
+        // Вычисляем кол-во свеч в каждом дне
+        LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = countingNumberCandlesPerDay(source, series);
+        // Вычисляем кол-во свеч в каждой неделе
+        LinkedHashMap<WeekNumberAndYear, Integer> numberOfCandlesPerWeekMap = countingNumberCandlesOfWeeks(numberOfCandlesPerDayMap);
+        WeekNumberAndYear firstWeekNumberAndYear = numberOfCandlesPerWeekMap.entrySet().iterator().next().getKey();
+
+        WeekNumberAndYear prevWeekNumberAndYear = null;
+        List<Double> valuesByPeriod = new ArrayList<>();
+        XYSeries emaValues = new XYSeries(name);
+        int period;
+        double multiplier = 0;
+        for (int i = 0; i < source.getItemCount(series); i++) {
+            double current_time = source.getXValue(series, i);
+            double currentValue = source.getYValue(series, i);
+            Date currentDate = new Date(Math.round(current_time));
+            LocalDate currentLocalDate = new Timestamp(currentDate.getTime()).toLocalDateTime().toLocalDate();
+            int currentWeekNumber = currentLocalDate.get(WeekFields.ISO.weekOfWeekBasedYear());
+            int currentYearOfWeek = currentLocalDate.get(WeekFields.ISO.weekBasedYear());
+            WeekNumberAndYear currentWeekNumberAndYear = new WeekNumberAndYear(currentWeekNumber, currentYearOfWeek);
+            if (i == 0) {
+                prevWeekNumberAndYear = currentWeekNumberAndYear;
+                valuesByPeriod.add(currentValue);
+            } else {
+                if (!currentWeekNumberAndYear.equals(prevWeekNumberAndYear)) {
+                    period = numberOfCandlesPerWeekMap.get(prevWeekNumberAndYear);
+                    multiplier = 2.0 / (period + 1);
+                    // Первое значение EMA - простое среднее за первые period значений
+                    double firstSMA = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+                    emaValues.add(current_time, firstSMA);
+                    prevWeekNumberAndYear = currentWeekNumberAndYear;
+                    valuesByPeriod.clear();
+                } else {
+                    valuesByPeriod.add(currentValue);
+                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        // Расчет последующих значений EMA
+                        double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
+                        double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+                        emaValues.add(current_time, currentEMA);
+                    }
+                }
+            }
+        }
+        result.addSeries(emaValues);
+        return result;
+    }
+
+    /// Вычисляем кол-во свеч в каждой неделе
+    private static LinkedHashMap<WeekNumberAndYear, Integer> countingNumberCandlesOfWeeks(
+            LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap) {
+        LinkedHashMap<WeekNumberAndYear, Integer> numberOfCandlesPerWeekMap = new LinkedHashMap<>();
+        final WeekNumberAndYear[] prevWeekNumberAndYear = new WeekNumberAndYear[1];
+
+        final int[] numberOfCandlesOfWeek = {0};
+        numberOfCandlesPerDayMap.forEach((key, value) -> {
+            int weekNumber = key.get(WeekFields.ISO.weekOfWeekBasedYear());
+            int yearOfWeek = key.get(WeekFields.ISO.weekBasedYear());
+            if (prevWeekNumberAndYear[0] == null) {
+                prevWeekNumberAndYear[0] = new WeekNumberAndYear(weekNumber, yearOfWeek);
+                numberOfCandlesOfWeek[0] += value;
+            } else if (weekNumber > prevWeekNumberAndYear[0].getNumberOfWeek() ||
+                    (weekNumber == 1 && weekNumber < prevWeekNumberAndYear[0].getNumberOfWeek())) {
+//                numberOfCandlesPerWeekMap.put(prevWeekNumberAndYear[0], numberOfCandlesOfWeek[0]);
+                numberOfCandlesPerWeekMap.put(new WeekNumberAndYear(prevWeekNumberAndYear[0]), numberOfCandlesOfWeek[0]);
+                prevWeekNumberAndYear[0].setNumberOfWeek(weekNumber);
+                prevWeekNumberAndYear[0].setYear(yearOfWeek);
+//                prevWeekNumberAndYear[0].set(new WeekNumberAndYear(weekNumber, yearOfWeek));
+                numberOfCandlesOfWeek[0] = value;
+            } else if (weekNumber == prevWeekNumberAndYear[0].getNumberOfWeek()) {
+                numberOfCandlesOfWeek[0] += value;
+            } else {
+                log.error("Incorrect number of week!!");
+            }
+        });
+        return numberOfCandlesPerWeekMap;
     }
 
     // Вычисляем кол-во свеч в каждом дне
@@ -172,7 +254,7 @@ public class MyMovingAverage {
     /**
      * Вычисляем экспоненциальное скользящее стандартное отклонение для периода D1
      */
-    public static XYSeries calculateExponentialStdDevByD1(XYDataset ema,OHLCDataset source,  String name) {
+    public static XYSeries calculateExponentialStdDevByD1(XYDataset ema, OHLCDataset source, String name) {
         int seriesCount = source.getSeriesCount();  // = 1 (содержится 1 серия)
         int series = 0;
         if (seriesCount > 1) {
@@ -185,6 +267,7 @@ public class MyMovingAverage {
         LocalDate firstLocalDate = numberOfCandlesPerDayMap.entrySet().iterator().next().getKey();
         LocalDate prevDay = null;
         List<Double> valuesByPeriod = new ArrayList<>();
+        int firstPeriod = 0;
         int period = 0;
         double multiplier = 0;
         for (int i = 0; i < source.getItemCount(series); i++) {
@@ -200,11 +283,11 @@ public class MyMovingAverage {
             } else {
                 if (currentLocalDate.isAfter(prevDay)) {
                     period = numberOfCandlesPerDayMap.get(prevDay);
+                    if (prevDay.isEqual(firstLocalDate)) {
+                        firstPeriod = period;
+                    }
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение STD
-                    // Первое значение времени для расчета STD
-//                    double first_time = source.getXValue(series, period);
-                    // Первое значение STD - обычное стандартное отклонение
+                    // Первое значение времени для расчета STD - обычное стандартное отклонение
                     double firstStdDev = calculateStdDev(valuesByPeriod);
                     stdDevValues.add(currentTime, firstStdDev);
                     prevDay = currentLocalDate;
@@ -213,9 +296,11 @@ public class MyMovingAverage {
                     valuesByPeriod.add(currentHighValue);
                     valuesByPeriod.add(currentLowValue);
                     if (currentLocalDate.isAfter(firstLocalDate)) {
+                        log.info("i = {}", i);
+                        log.info("period = {}", period);
                         // Расчет последующих значений STD
-                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - period));
-                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - period));
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - firstPeriod));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - firstPeriod));
                         double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
                         double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
                         stdDevValues.add(currentTime, currentStdDev);
@@ -230,9 +315,79 @@ public class MyMovingAverage {
 
 
     /**
+     * Вычисляем экспоненциальное скользящее стандартное отклонение для периода W
+     */
+    public static XYSeries calculateExponentialStdDevByW(XYDataset ema, OHLCDataset source, String name) {
+        int seriesCount = source.getSeriesCount();  // = 1 (содержится 1 серия)
+        int series = 0;
+        if (seriesCount > 1) {
+            log.error("seriesCount > 1");
+        }
+        XYSeries stdDevValues = new XYSeries(name);
+
+        // Вычисляем кол-во свеч в каждом дне
+        LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = countingNumberCandlesPerDay(source, series);
+        // Вычисляем кол-во свеч в каждой неделе
+        LinkedHashMap<WeekNumberAndYear, Integer> numberOfCandlesPerWeekMap = countingNumberCandlesOfWeeks(numberOfCandlesPerDayMap);
+        WeekNumberAndYear firstWeekNumberAndYear = numberOfCandlesPerWeekMap.entrySet().iterator().next().getKey();
+        WeekNumberAndYear prevWeekNumberAndYear = null;
+        List<Double> valuesByPeriod = new ArrayList<>();
+        int firstPeriod = 0;
+        int period = 0;
+        double multiplier = 0;
+
+
+        for (int i = 0; i < source.getItemCount(series); i++) {
+            double currentTime = source.getXValue(series, i);
+            double currentHighValue = source.getHighValue(series, i);
+            double currentLowValue = source.getLowValue(series, i);
+            Date currentDate = new Date(Math.round(currentTime));
+            LocalDate currentLocalDate = new Timestamp(currentDate.getTime()).toLocalDateTime().toLocalDate();
+            int currentWeekNumber = currentLocalDate.get(WeekFields.ISO.weekOfWeekBasedYear());
+            int currentYearOfWeek = currentLocalDate.get(WeekFields.ISO.weekBasedYear());
+            WeekNumberAndYear currentWeekNumberAndYear = new WeekNumberAndYear(currentWeekNumber, currentYearOfWeek);
+            if (i == 0) {
+                prevWeekNumberAndYear = currentWeekNumberAndYear;
+                valuesByPeriod.add(currentHighValue);
+                valuesByPeriod.add(currentLowValue);
+            } else {
+                if (!currentWeekNumberAndYear.equals(prevWeekNumberAndYear)) {
+                    period = numberOfCandlesPerWeekMap.get(prevWeekNumberAndYear);
+                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        firstPeriod = period;
+                    }
+                    multiplier = 2.0 / (period + 1);
+                    // Первое значение времени для расчета STD - обычное стандартное отклонение
+                    double firstStdDev = calculateStdDev(valuesByPeriod);
+                    stdDevValues.add(currentTime, firstStdDev);
+                    prevWeekNumberAndYear = currentWeekNumberAndYear;
+                    valuesByPeriod.clear();
+                } else {
+                    valuesByPeriod.add(currentHighValue);
+                    valuesByPeriod.add(currentLowValue);
+
+
+                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        log.info("i = {}", i);
+                        log.info("period = {}", period);
+                        // Расчет последующих значений STD
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - firstPeriod));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - firstPeriod));
+                        double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
+                        double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
+                        stdDevValues.add(currentTime, currentStdDev);
+                    }
+                }
+            }
+        }
+
+        return stdDevValues;
+    }
+
+    /**
      * Вычисляем экспоненциальное скользящее стандартное отклонение
      */
-    public static XYSeries calculateExponentialStdDev(XYDataset ema,OHLCDataset source,  String name, int period) {
+    public static XYSeries calculateExponentialStdDev(XYDataset ema, OHLCDataset source, String name, int period) {
         if (source.getItemCount(0) < period) {
             return new XYSeries(name);
         }
