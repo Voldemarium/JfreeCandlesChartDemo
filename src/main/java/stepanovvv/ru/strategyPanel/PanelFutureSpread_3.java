@@ -15,7 +15,7 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     private static final StrategyName name = StrategyName.STRATEGY_FUTURE_SPREAD_3;
     private static final String strategyUrl = "futuresSpread3";
     private static final String[] list1 = new String[]{
-            "currency_future_spread_3", "metal_future_spread_3", "index_future_spread_3"};
+            "currency_future_spread_3", "gold_future_spread_3", "index_future_spread_3"};
     private static final String[][] list2 = new String[][]{
             {"CN,Si,UC", "asdddd1"},   // раскрытие list1[0] - "currency_future_spread" (RUS:SI1!/RUS:CR1!/RUS:UC1!)
             {"GL,Si,GD", "asdddd2"},   // раскрытие list1[1] - "metal_future_spread" (100*(31103.4768*RUS:GL1!/RUS:SI1!-RUS:GD1!)/RUS:GD1!)
@@ -40,7 +40,6 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     public String[][] setCurrencyFutureSpread_3() {
         // Получаем из API MOEX даты экспирации
         List<String> listOfExpirationDates = moexService.getExpirationDateForCurrenciesFuturesSpread_3();
-
         String[] arrayOfExpirationDates = listOfExpirationDates.toArray(String[]::new);
         return new String[][]{
                 // Данные сохранены в БД (в БД хранить информацию о последнем обновлении, если новый день - обновить БД)
@@ -50,10 +49,13 @@ public class PanelFutureSpread_3 extends StrategyPanel {
     }
 
     public String[][] setMetalFutureSpread_3() {
+        // Получаем из API MOEX даты экспирации
+        List<String> listOfExpirationDates = moexService.getExpirationDateForGoldFuturesSpread_3();
+        String[] arrayOfExpirationDates = listOfExpirationDates.toArray(String[]::new);
         return new String[][]{
                 // Инструменты сохранять в БД (в БД хранить информацию о последнем обновлении, если новый день -
                 // обновить БД)
-                {"exp_date_1" , "exp_date_2", "exp_date_3" , "exp_date_4"},   // раскрытие list2[1][0] - "metal_future_spread" (100*(31103.4768*RUS:GL1!/RUS:SI1!-RUS:GD1!)/RUS:GD1!)
+                arrayOfExpirationDates,   // раскрытие list2[1][0] - "metal_future_spread" (100*(31103.4768*RUS:GL1!/RUS:SI1!-RUS:GD1!)/RUS:GD1!)
                 {"exp_date_1" , "exp_date_2", "exp_date_3" , "exp_date_4"}   // раскрытие list2[1][1] - "metal_future_spread" - "asdddd2"
         };
     }

@@ -26,6 +26,12 @@ public class MoexService {
                 String.class);
     }
 
+    /// Получение дат экспираций фьючерсов, участвующих в расчете 3-хногого спреда
+    public List<String> getExpirationDateForGoldFuturesSpread_3() {
+        return stockInfoDtoRepository2.getListByParsingJson("futuresSpread3/gold_future_spread_3/expirationDates",
+                String.class);
+    }
+
     /// Получение свеч CandleMoex по составленному url
     public List<CandleMoex> getCandleMoexByUrlAndTicker(String url) {
         return stockInfoDtoRepository3.getListByParsingJson(url, CandleMoex.class);
