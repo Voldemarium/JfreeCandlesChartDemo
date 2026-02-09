@@ -2,6 +2,7 @@ package stepanovvv.ru.models;
 
 import lombok.Data;
 
+
 @Data
 public class WeekNumberAndYear {
     int numberOfWeek;

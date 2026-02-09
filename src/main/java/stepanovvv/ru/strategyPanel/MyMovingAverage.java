@@ -7,6 +7,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import stepanovvv.ru.models.WeekNumberAndYear;
+import stepanovvv.ru.tools.Median;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -15,6 +16,9 @@ import java.util.*;
 
 @Slf4j
 public class MyMovingAverage {
+//    private static final int numberForMedian = 13; // кол-во предыдущих элементов (свечей)
+    // для медианного сглаживания - для того, чтобы игнорировать резкие ценовые выбросы
+
     /// name - это название скользящей
     /// period - это период расчета средней скользящей - кол-во свечей
 
@@ -49,17 +53,38 @@ public class MyMovingAverage {
                 if (currentLocalDate.isAfter(prevDay)) {
                     period = numberOfCandlesPerDayMap.get(prevDay);
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение EMA - простое среднее за первые period значений
-                    double firstSMA = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
-                    emaValues.add(current_time, firstSMA);
+                    if (prevDay.isEqual(firstLocalDate)) {
+                        // Первое значение EMA - простое среднее за первые period значений
+//                    double firstSMA1 = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+                        // Первое значение EMA - медиана за первые period значений
+                        double firstSMA = Median.calculateMedian(valuesByPeriod);
+                        emaValues.add(current_time, firstSMA);
+                        valuesByPeriod.clear();
+                    } else {
+                        /// Если это первая свеча нового дня
+                        double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
+                        double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+                        emaValues.add(current_time, currentEMA);
+                    }
                     prevDay = currentLocalDate;
-                    valuesByPeriod.clear();
+
                 } else if (currentLocalDate.equals(prevDay)) {
-                    valuesByPeriod.add(currentValue);
+                    if (prevDay.isEqual(firstLocalDate)) {
+                        valuesByPeriod.add(currentValue);
+                    }
                     if (currentLocalDate.isAfter(firstLocalDate)) {
                         // Расчет последующих значений EMA
                         double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
+                        /// Применим медианное сглаживание для того, чтобы игнорировать резкие ценовые выбросы
+                        // выборка из текущего и 5 предыдущих значений
+//                        List<Double> valuesForMedian = new ArrayList<>();
+//                        valuesForMedian.add(currentValue);
+//                        for (int j = 1; j <= numberForMedian; j++) {
+//                            valuesForMedian.add(source.getYValue(series, i - j));
+//                        }
+//                        double currentMedianValue = Median.calculateMedian(valuesForMedian);
                         double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+//                        double currentEMA = (currentMedianValue - prevEMA) * multiplier + prevEMA;
                         emaValues.add(current_time, currentEMA);
                     }
                 } else {
@@ -106,17 +131,37 @@ public class MyMovingAverage {
                 if (!currentWeekNumberAndYear.equals(prevWeekNumberAndYear)) {
                     period = numberOfCandlesPerWeekMap.get(prevWeekNumberAndYear);
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение EMA - простое среднее за первые period значений
-                    double firstSMA = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
-                    emaValues.add(current_time, firstSMA);
-                    prevWeekNumberAndYear = currentWeekNumberAndYear;
-                    valuesByPeriod.clear();
-                } else {
-                    valuesByPeriod.add(currentValue);
-                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
-                        // Расчет последующих значений EMA
+                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        // Первое значение EMA - простое среднее за первые period значений
+//                    double firstSMA1 = valuesByPeriod.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+                        // Первое значение EMA - медиана за первые period значений
+                        double firstSMA = Median.calculateMedian(valuesByPeriod);
+                        emaValues.add(current_time, firstSMA);
+                        valuesByPeriod.clear();
+                    } else {
+                        /// Если это первая свеча нового дня
                         double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
                         double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+                        emaValues.add(current_time, currentEMA);
+                    }
+                    prevWeekNumberAndYear = currentWeekNumberAndYear;
+                } else {
+                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        valuesByPeriod.add(currentValue);
+                    }
+                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        // Расчет последующих значений EMA
+                        /// Применим медианное сглаживание для того, чтобы игнорировать резкие ценовые выбросы
+                        // выборка из текущего и 5 предыдущих значений
+//                        List<Double> valuesForMedian = new ArrayList<>();
+//                        valuesForMedian.add(currentValue);
+//                        for (int j = 1; j <= numberForMedian; j++) {
+//                            valuesForMedian.add(source.getYValue(series, i - j));
+//                        }
+//                        double currentMedianValue = Median.calculateMedian(valuesForMedian);
+                        double prevEMA = emaValues.getY(emaValues.getItemCount() - 1).doubleValue();
+                        double currentEMA = (currentValue - prevEMA) * multiplier + prevEMA;
+//                        double currentEMA = (currentMedianValue- prevEMA) * multiplier + prevEMA;
                         emaValues.add(current_time, currentEMA);
                     }
                 }
@@ -156,7 +201,7 @@ public class MyMovingAverage {
         return numberOfCandlesPerWeekMap;
     }
 
-    // Вычисляем кол-во свеч в каждом дне
+    /// Вычисляем кол-во свеч в каждом дне
     private static LinkedHashMap<LocalDate, Integer> countingNumberCandlesPerDay(XYDataset source, int series) {
         LinkedHashMap<LocalDate, Integer> numberOfCandlesPerDayMap = new LinkedHashMap<>();
         LocalDate prevDay = null;
@@ -182,7 +227,7 @@ public class MyMovingAverage {
     }
 
 
-    /// Метод для вычисления EMA по заданному периоду (кол-ву свеч)
+    /// Метод для вычисления обычной EMA по заданному периоду (кол-ву свеч)
     public static XYDataset createMovingAverage(XYDataset source, String suffix, int period) {
         Args.nullNotPermitted(source, "source"); // проверка на null  source
         XYSeriesCollection result = new XYSeriesCollection();
@@ -218,7 +263,7 @@ public class MyMovingAverage {
 
 
     /**
-     * // реализация вычисления экспоненциальной скользящей средней (EMA)
+     * // реализация вычисления обычной экспоненциальной скользящей средней (EMA)
      */
     public static XYSeries calculateEMA(XYDataset source, int series, String name, int period) {
         Args.nullNotPermitted(source, "source");
@@ -267,8 +312,8 @@ public class MyMovingAverage {
         LocalDate firstLocalDate = numberOfCandlesPerDayMap.entrySet().iterator().next().getKey();
         LocalDate prevDay = null;
         List<Double> valuesByPeriod = new ArrayList<>();
-        int firstPeriod = 0;
-        int period = 0;
+        int shiftEma = 0;
+        int period;
         double multiplier = 0;
         for (int i = 0; i < source.getItemCount(series); i++) {
             double currentTime = source.getXValue(series, i);
@@ -283,26 +328,58 @@ public class MyMovingAverage {
             } else {
                 if (currentLocalDate.isAfter(prevDay)) {
                     period = numberOfCandlesPerDayMap.get(prevDay);
-                    if (prevDay.isEqual(firstLocalDate)) {
-                        firstPeriod = period;
-                    }
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение времени для расчета STD - обычное стандартное отклонение
-                    double firstStdDev = calculateStdDev(valuesByPeriod);
-                    stdDevValues.add(currentTime, firstStdDev);
-                    prevDay = currentLocalDate;
-                    valuesByPeriod.clear();
-                } else if (currentLocalDate.equals(prevDay)) {
-                    valuesByPeriod.add(currentHighValue);
-                    valuesByPeriod.add(currentLowValue);
-                    if (currentLocalDate.isAfter(firstLocalDate)) {
-                        log.info("i = {}", i);
-                        log.info("period = {}", period);
-                        // Расчет последующих значений STD
-                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - firstPeriod));
-                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - firstPeriod));
+                    if (prevDay.isEqual(firstLocalDate)) {
+                        shiftEma = period;
+                        // Первое значение времени для расчета STD - обычное стандартное отклонение
+                        double firstStdDev = calculateStdDev(valuesByPeriod);
+                        stdDevValues.add(currentTime, firstStdDev);
+                        valuesByPeriod.clear();
+                    } else {
+                        int sequenceNumberEma = i - shiftEma;
+                        /// Если это первая свеча нового дня
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double maxCurrentDeviation = Math.max(highDeviation, lowDeviation);
                         double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
-                        double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
+                        double currentStdDev = prevStdDev + multiplier * (maxCurrentDeviation - prevStdDev);
+                        stdDevValues.add(currentTime, currentStdDev);
+                    }
+                    prevDay = currentLocalDate;
+                } else if (currentLocalDate.equals(prevDay)) {
+                    if (prevDay.isEqual(firstLocalDate)) {
+                        valuesByPeriod.add(currentHighValue);
+                        valuesByPeriod.add(currentLowValue);
+                    }
+                    if (currentLocalDate.isAfter(firstLocalDate)) {
+//                        log.info("i = {}", i);
+//                        log.info("period = {}", period);
+                        int sequenceNumberEma = i - shiftEma;
+                        // Расчет последующих значений STD
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double maxCurrentDeviation = Math.max(highDeviation, lowDeviation);
+                        /// Применим медианное сглаживание для того, чтобы игнорировать резкие ценовые выбросы
+                        // выборка из текущего и 5 предыдущих значений
+//                        List<Double> deviationForMedian = new ArrayList<>();
+//                        deviationForMedian.add(maxCurrentDeviation);
+//                        for (int j = 1; j < numberForMedian; j++) {
+//                            double emaValue;
+//                            if (sequenceNumberEma >= j) {
+//                               emaValue = ema.getYValue(0, sequenceNumberEma - j);
+//                            } else {
+//                                emaValue = ema.getYValue(0, 0);
+//                            }
+//                            double highDeviation_j = Math.abs(source.getHighValue(0, i - j) - emaValue);
+//                            double lowDeviation_j = Math.abs(source.getLowValue(0, i - j) - emaValue);
+//                            double maxCurrentDeviation_j = Math.max(highDeviation_j, lowDeviation_j);
+//                            deviationForMedian.add(maxCurrentDeviation_j);
+//                        }
+//                        double medianCurrentDeviation = Median.calculateMedian(deviationForMedian);
+                        double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
+
+                        double currentStdDev = prevStdDev + multiplier * (maxCurrentDeviation - prevStdDev);
+//                        double currentStdDev = prevStdDev + multiplier * (medianCurrentDeviation - prevStdDev);
                         stdDevValues.add(currentTime, currentStdDev);
                     }
                 } else {
@@ -332,8 +409,8 @@ public class MyMovingAverage {
         WeekNumberAndYear firstWeekNumberAndYear = numberOfCandlesPerWeekMap.entrySet().iterator().next().getKey();
         WeekNumberAndYear prevWeekNumberAndYear = null;
         List<Double> valuesByPeriod = new ArrayList<>();
-        int firstPeriod = 0;
-        int period = 0;
+        int shiftEma = 0;
+        int period;
         double multiplier = 0;
 
 
@@ -353,34 +430,63 @@ public class MyMovingAverage {
             } else {
                 if (!currentWeekNumberAndYear.equals(prevWeekNumberAndYear)) {
                     period = numberOfCandlesPerWeekMap.get(prevWeekNumberAndYear);
-                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
-                        firstPeriod = period;
-                    }
                     multiplier = 2.0 / (period + 1);
-                    // Первое значение времени для расчета STD - обычное стандартное отклонение
-                    double firstStdDev = calculateStdDev(valuesByPeriod);
-                    stdDevValues.add(currentTime, firstStdDev);
-                    prevWeekNumberAndYear = currentWeekNumberAndYear;
-                    valuesByPeriod.clear();
-                } else {
-                    valuesByPeriod.add(currentHighValue);
-                    valuesByPeriod.add(currentLowValue);
-
-
-                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
-                        log.info("i = {}", i);
-                        log.info("period = {}", period);
-                        // Расчет последующих значений STD
-                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, i - firstPeriod));
-                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, i - firstPeriod));
+                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        shiftEma = period;
+                        // Первое значение времени для расчета STD - обычное стандартное отклонение
+                        double firstStdDev = calculateStdDev(valuesByPeriod);
+                        stdDevValues.add(currentTime, firstStdDev);
+                        valuesByPeriod.clear();
+                    } else {
+                        int sequenceNumberEma = i - shiftEma;
+                        /// Если это первая свеча нового дня
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double maxCurrentDeviation = Math.max(highDeviation, lowDeviation);
                         double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
-                        double currentStdDev = prevStdDev + multiplier * (Math.max(highDeviation, lowDeviation) - prevStdDev);
+                        double currentStdDev = prevStdDev + multiplier * (maxCurrentDeviation - prevStdDev);
+                        stdDevValues.add(currentTime, currentStdDev);
+                    }
+                    prevWeekNumberAndYear = currentWeekNumberAndYear;
+                } else {
+                    if (prevWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        valuesByPeriod.add(currentHighValue);
+                        valuesByPeriod.add(currentLowValue);
+                    }
+                    if (!currentWeekNumberAndYear.equals(firstWeekNumberAndYear)) {
+                        //                        log.info("i = {}", i);
+//                        log.info("period = {}", period);
+                        int sequenceNumberEma = i - shiftEma;
+                        // Расчет последующих значений STD
+                        double highDeviation = Math.abs(source.getHighValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double lowDeviation = Math.abs(source.getLowValue(0, i) - ema.getYValue(0, sequenceNumberEma));
+                        double maxCurrentDeviation = Math.max(highDeviation, lowDeviation);
+                        /// Применим медианное сглаживание для того, чтобы игнорировать резкие ценовые выбросы
+                        // выборка из текущего и 5 предыдущих значений
+//                        List<Double> deviationForMedian = new ArrayList<>();
+//                        deviationForMedian.add(maxCurrentDeviation);
+//                        for (int j = 1; j < numberForMedian; j++) {
+//                            double emaValue;
+//                            if (sequenceNumberEma >= j) {
+//                                emaValue = ema.getYValue(0, sequenceNumberEma - j);
+//                            } else {
+//                                emaValue = ema.getYValue(0, 0);
+//                            }
+//                            double highDeviation_j = Math.abs(source.getHighValue(0, i - j) - emaValue);
+//                            double lowDeviation_j = Math.abs(source.getLowValue(0, i - j) - emaValue);
+//                            double maxCurrentDeviation_j = Math.max(highDeviation_j, lowDeviation_j);
+//                            deviationForMedian.add(maxCurrentDeviation_j);
+//                        }
+//                        double medianCurrentDeviation = Median.calculateMedian(deviationForMedian);
+
+                        double prevStdDev = stdDevValues.getY(stdDevValues.getItemCount() - 1).doubleValue();
+                        double currentStdDev = prevStdDev + multiplier * (maxCurrentDeviation - prevStdDev);
+//                        double currentStdDev = prevStdDev + multiplier * (medianCurrentDeviation - prevStdDev);
                         stdDevValues.add(currentTime, currentStdDev);
                     }
                 }
             }
         }
-
         return stdDevValues;
     }
 
@@ -432,15 +538,25 @@ public class MyMovingAverage {
 
     // обычное стандартное отклонение
     private static double calculateStdDev(List<Double> values) {
-        double meanAverage = values.stream()
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0.0);
+        // Сначала расчитываем среднее хначение
+//        double meanAverage = values.stream()
+//                .mapToDouble(Double::doubleValue)
+//                .average()
+//                .orElse(0.0);
+//        // Затем рассчитываем среднеквадратичное значение отклонения каждого значения от среднего,
+//        // и вычисляем среднее значение этого отклонения
+//        double variance = values.stream()
+//                .mapToDouble(value -> Math.pow(value - meanAverage, 2))
+//                .average()
+//                .orElse(0.0);
+//        return Math.sqrt(variance);
 
-        double variance = values.stream()
-                .mapToDouble(value -> Math.pow(value - meanAverage, 2))
-                .average()
-                .orElse(0.0);
-        return Math.sqrt(variance);
+        // 1. Сначала расчитываем медианное хначение
+        double meanMedian = Median.calculateMedian(values);
+        // 2. Вычисляем абсолютные отклонения от медианы
+        double[] absDeviations = values.stream()
+                .mapToDouble(value -> Math.abs(value - meanMedian)).toArray();
+        // и медиану абсолютных отклонений
+        return Median.calculateMedian(absDeviations);
     }
 }
